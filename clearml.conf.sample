@@ -1,0 +1,10 @@
+api {
+  # Yuki Tatsunami's workspace
+  web_server: https://app.community.clear.ml
+  api_server: https://api.community.clear.ml
+  files_server: https://files.community.clear.ml
+  credentials {
+    "access_key" = "xxx"
+    "secret_key" = "xxx"
+  }
+}

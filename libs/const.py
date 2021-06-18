@@ -1,0 +1,6 @@
+CIFAR10 = 'cifar10'
+CIFAR100 = 'cifar100'
+IMAGENET = 'imagenet'
+PATCH_SIZE = 'patch_size'
+DIM = 'dim'
+DEPTH = 'depth'
