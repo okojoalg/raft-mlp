@@ -4,7 +4,7 @@ from typing import List, Dict
 from torch import nn
 from einops.layers.torch import Rearrange, Reduce
 
-from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_HW_LN_CODIM, TOKEN_MIXING_TYPES, SEP_HW_LN_C, ORIGINAL
+from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_HW_LN_CODIM, TOKEN_MIXING_TYPES, ORIGINAL
 
 
 class Block(nn.Module):
@@ -92,7 +92,7 @@ class SeparateLNChannelLevel(Level):
 
 class OriginalLevel(Level):
     def __init__(self, in_channels, out_channels, depth=4, image_size=224, patch_size=4, expansion_factor=4,
-                 dropout=0., token_mixing_type: str = ORIGINAL):
+                 dropout=0.):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(*[
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
@@ -142,7 +142,6 @@ class PyramidMixer(nn.Module):
                 patch_size=layer.get(PATCH_SIZE),
                 expansion_factor=expansion_factor,
                 dropout=dropout,
-                token_mixing_type=token_mixing_type,
             ))
             image_size = image_size // layer.get(PATCH_SIZE)
         self.levels = nn.Sequential(*modules)
