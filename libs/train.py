@@ -68,7 +68,7 @@ def training(local_rank, params):
                 "num_warmup_epochs",
             ]
             hp = {k: params.settings[k] for k in hyper_params}
-            hp.update({f"layer{i}_{k}": v for i, w in enumerate(params.settings["layer"]) for k, v in w.items()})
+            hp.update({f"layer{i}_{k}": v for i, w in enumerate(params.settings["layers"]) for k, v in w.items()})
             task.connect(hp)
 
     train_loader, val_loader, num_classes, image_size, channels = get_dataflow(params)
