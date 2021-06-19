@@ -3,6 +3,7 @@ checkpoint_every: 1000
 log_every_iters: 15
 dataset_name: cifar10
 data_path: /datasets
+token_mixing_type: sep_hw_ln_codim
 in_channels: 3
 layers:
   - depth: 2

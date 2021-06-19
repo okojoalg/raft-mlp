@@ -188,6 +188,7 @@ def initialize(params):
         num_classes=params.settings.num_classes,
         expansion_factor=params.settings.expansion_factor,
         dropout=params.settings.dropout,
+        token_mixing_type=params.settings.token_mixing_type
     )
     model = idist.auto_model(model)
 
