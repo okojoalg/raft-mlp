@@ -14,9 +14,9 @@ class Block(nn.Module):
             self.norm = nn.LayerNorm(norm_dim)
         elif channel_norm:
             self.norm = nn.Sequential(*[
-                Rearrange('b (c o1) o2 -> b (o1 o2) c', o2=dim),
+                Rearrange('b (c o1) o2 -> b (o1 o2) c', c=norm_dim, o2=dim),
                 nn.LayerNorm(norm_dim),
-                Rearrange('b (o1 o2) c -> b (c o1) o2', o2=dim),
+                Rearrange('b (o1 o2) c -> b (c o1) o2', c=norm_dim, o2=dim),
             ])
         else:
             self.norm = nn.Sequential(*[
