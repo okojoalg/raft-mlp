@@ -16,16 +16,17 @@ from omegaconf import open_dict
 from torch import nn
 from torch.cuda.amp import GradScaler, autocast
 
-from libs.const import CIFAR10, CIFAR100, IMAGENET
+from libs.const import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.models import PyramidMixer
+
 
 def training(local_rank, params):
     rank = idist.get_rank()
     manual_seed(params.settings.seed + rank)
     device = idist.device()
 
-    logger = setup_logger(name="Pyramid-Mixer", distributed_rank=local_rank)
+    logger = setup_logger(name=LOGGER_NAME, distributed_rank=local_rank)
     clearml_logger = ClearMLLogger(
         project_name=params.settings.project_name,
         task_name=params.settings.task_name,
