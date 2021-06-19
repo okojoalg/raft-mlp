@@ -78,10 +78,10 @@ class SeparateLNChannelLevel(Level):
             *[nn.Sequential(*[
                 # height mixer
                 Rearrange('b (h w) c -> b (c w) h', h=self._h),
-                Block(self._h, out_channels * self._w, expansion_factor, dropout, channel_norm=True),
+                Block(self._h, out_channels, expansion_factor, dropout, channel_norm=True),
                 # width mixer
                 Rearrange('b (c w) h -> b (c h) w', h=self._h, w=self._w),
-                Block(self._w, out_channels * self._h, expansion_factor, dropout, channel_norm=True),
+                Block(self._w, out_channels, expansion_factor, dropout, channel_norm=True),
                 # channel mixer
                 Rearrange('b (c h) w -> b (h w) c', h=self._h, w=self._w),
                 Block(out_channels, out_channels, expansion_factor, dropout),
