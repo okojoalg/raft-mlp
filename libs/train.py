@@ -66,7 +66,7 @@ def training(local_rank, params):
             ]
             task.connect({k: params.settings[k] for k in hyper_params})
 
-    train_loader, test_loader, num_classes, image_size, channels = get_dataflow(params)
+    train_loader, val_loader, num_classes, image_size, channels = get_dataflow(params)
 
     with open_dict(params):
         params.settings.num_iters_per_epoch = len(train_loader)
@@ -91,7 +91,7 @@ def training(local_rank, params):
         epoch = trainer.state.epoch
         state = train_evaluator.run(train_loader)
         log_metrics(logger, epoch, state.times["COMPLETED"], "Train", state.metrics)
-        state = evaluator.run(test_loader)
+        state = evaluator.run(val_loader)
         log_metrics(logger, epoch, state.times["COMPLETED"], "Test", state.metrics)
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED(every=params.settings.validate_every) | Events.COMPLETED, run_validation)
@@ -111,7 +111,7 @@ def training(local_rank, params):
             global_step_transform=global_step_from_engine(trainer, Events.EPOCH_COMPLETED),
         )
         clearml_logger.attach_output_handler(
-            train_evaluator,
+            evaluator,
             event_name=Events.EPOCH_COMPLETED,
             tag='validation/loss',
             metric_names=['loss'],
@@ -132,7 +132,7 @@ def training(local_rank, params):
         filename_prefix="best",
         n_saved=2,
         global_step_transform=global_step_from_engine(trainer),
-        score_name="test_accuracy",
+        score_name="val_accuracy",
         score_function=Checkpoint.get_default_score_fn("accuracy"),
     )
     evaluator.add_event_handler(
@@ -164,19 +164,19 @@ def get_dataflow(params):
         dg = CIFAR100Getter()
     else:
         raise ValueError("Invalid dataset name")
-    train_dataset, test_dataset = dg.get(params.settings.data_path)
+    train_ds, val_ds = dg.get(params.settings.data_path)
 
     if idist.get_local_rank() == 0:
         idist.barrier()
 
     train_loader = idist.auto_dataloader(
-        train_dataset, batch_size=params.settings.batch_size, num_workers=params.settings.num_workers, shuffle=True, drop_last=True,
+        train_ds, batch_size=params.settings.batch_size, num_workers=params.settings.num_workers, shuffle=True, drop_last=True,
     )
 
-    test_loader = idist.auto_dataloader(
-        test_dataset, batch_size=2 * params.settings.batch_size, num_workers=params.settings.num_workers, shuffle=False,
+    val_loader = idist.auto_dataloader(
+        val_ds, batch_size=2 * params.settings.batch_size, num_workers=params.settings.num_workers, shuffle=False,
     )
-    return train_loader, test_loader, dg.num_classes, dg.image_size, dg.channels
+    return train_loader, val_loader, dg.num_classes, dg.image_size, dg.channels
 
 
 def initialize(params):

@@ -50,8 +50,8 @@ class CIFARGetter(DatasetGetter, ABC):
 class CIFAR10Getter(CIFARGetter):
     def get(self, path):
         train_ds = datasets.CIFAR10(root=path, train=True, download=True, transform=self.train_transform)
-        test_ds = datasets.CIFAR10(root=path, train=False, download=True, transform=self.test_transform)
-        return train_ds, test_ds
+        val_ds = datasets.CIFAR10(root=path, train=False, download=True, transform=self.test_transform)
+        return train_ds, val_ds
 
     @property
     def num_classes(self):
@@ -61,8 +61,8 @@ class CIFAR10Getter(CIFARGetter):
 class CIFAR100Getter(CIFARGetter):
     def get(self, path):
         train_ds = datasets.CIFAR100(root=path, train=True, download=True, transform=self.train_transform)
-        test_ds = datasets.CIFAR100(root=path, train=False, download=True, transform=self.test_transform)
-        return train_ds, test_ds
+        val_ds = datasets.CIFAR100(root=path, train=False, download=True, transform=self.test_transform)
+        return train_ds, val_ds
 
     @property
     def num_classes(self):
@@ -91,8 +91,8 @@ class ImageNetGetter():
     def get(self, path):
         assert os.path.exists(path)
         train_ds = datasets.ImageNet(root=path, split='train', transform=self.train_transform)
-        test_ds = datasets.ImageNet(root=path, split='val', transform=self.test_transform)
-        return train_ds, test_ds
+        val_ds = datasets.ImageNet(root=path, split='val', transform=self.test_transform)
+        return train_ds, val_ds
 
     @property
     def num_classes(self):
