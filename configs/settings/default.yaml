@@ -2,7 +2,7 @@ seed: 42
 checkpoint_every: 1000
 log_every_iters: 15
 dataset_name: imagenet
-data_path: /datasets
+data_path: /datasets/imagenet
 in_channels: 3
 layers:
   - depth: 4
