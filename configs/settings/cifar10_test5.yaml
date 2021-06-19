@@ -3,7 +3,7 @@ checkpoint_every: 1000
 log_every_iters: 15
 dataset_name: cifar10
 data_path: /datasets
-token_mixing_type: original
+token_mixing_type: sep_hw_ln_c
 in_channels: 3
 layers:
   - depth: 4
@@ -20,7 +20,7 @@ num_warmup_epochs: 4
 validate_every: 1
 stop_iteration:
 project_name: pyramid-mixer
-task_name: cifar10-test
+task_name: cifar10-test5
 backend:
 resume_from:
 nproc_per_node:
