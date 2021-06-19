@@ -6,27 +6,28 @@ data_path: /datasets/imagenet
 token_mixing_type: sep_hw_ln_codim
 in_channels: 3
 layers:
-  - depth: 1
+  - depth: 3
     dim: 384
-    patch_size: 4
-  - depth: 1
+    patch_size: 8
+  - depth: 6
     dim: 768
-    patch_size: 4
-  - depth: 1
-    dim: 3072
-    patch_size: 7
+    patch_size: 2
+  - depth: 3
+    dim: 1024
+    patch_size: 2
 expansion_factor: 4
 dropout: 0.
-batch_size: 2
-num_workers: 2
+batch_size: 1280
+num_workers: 20
 lr: 0.001
-weight_decay: 1e-4
-num_epochs: 100
+end_lr: 1e-5
+weight_decay: 0.05
+num_epochs: 310
 num_warmup_epochs: 10
-validate_every: 1
+validate_every: 10
 stop_iteration:
 project_name: pyramid-mixer
-task_name: imagenet_test
+task_name: imagenet
 backend:
 resume_from:
 nproc_per_node:

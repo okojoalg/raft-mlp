@@ -6,7 +6,7 @@ import ignite.distributed as idist
 import torch
 import torch.optim as optim
 from ignite.contrib.engines import common
-from ignite.contrib.handlers import ClearMLLogger, PiecewiseLinear
+from ignite.contrib.handlers import ClearMLLogger, PiecewiseLinear, CosineAnnealingScheduler, ConcatScheduler, LinearCyclicalScheduler
 from ignite.contrib.handlers.clearml_logger import ClearMLSaver
 from ignite.engine import Engine, Events
 from ignite.handlers import DiskSaver, Checkpoint, global_step_from_engine
@@ -196,7 +196,7 @@ def initialize(params):
     )
     model = idist.auto_model(model)
 
-    optimizer = optim.Adam(
+    optimizer = optim.AdamW(
         model.parameters(),
         lr=params.settings.lr,
         weight_decay=params.settings.weight_decay,
@@ -205,13 +205,12 @@ def initialize(params):
     criterion = nn.CrossEntropyLoss().to(idist.device())
 
     le = params.settings.num_iters_per_epoch
-    milestones_values = [
-        (0, 0.0),
-        (le * params.settings.num_warmup_epochs, params.settings.lr),
-        (le * params.settings.num_epochs, 0.0),
-    ]
-    lr_scheduler = PiecewiseLinear(optimizer, param_name="lr", milestones_values=milestones_values)
 
+    lr_scheduler1 = LinearCyclicalScheduler(optimizer, "lr", start_value=0.0, end_value=params.settings.lr,
+                                            cycle_size=2 * le * params.settings.num_warmup_epochs)
+    lr_scheduler2 = CosineAnnealingScheduler(optimizer, "lr", start_value=params.settings.lr, end_value=params.settings.end_lr,
+                                             cycle_size=le * (params.settings.num_epochs - params.settings.num_warmup_epochs))
+    lr_scheduler = ConcatScheduler(schedulers=[lr_scheduler1, lr_scheduler2], durations=[le * params.settings.num_warmup_epochs, ])
     return model, optimizer, criterion, lr_scheduler
 
 

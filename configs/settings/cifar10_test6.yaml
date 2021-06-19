@@ -14,7 +14,8 @@ dropout: 0.
 batch_size: 512
 num_workers: 2
 lr: 0.001
-weight_decay: 1e-4
+end_lr: 1e-5
+weight_decay: 0.05
 num_epochs: 24
 num_warmup_epochs: 4
 validate_every: 1
