@@ -59,6 +59,9 @@ def training(local_rank, params):
             task = Task.init(project_name=params.settings.project_name, task_name=params.settings.task_name)
             task.connect_configuration(dict(params.settings))
             hyper_params = [
+                "token_mixing_type",
+                "layers",
+                "dropout",
                 "batch_size",
                 "weight_decay",
                 "num_epochs",
