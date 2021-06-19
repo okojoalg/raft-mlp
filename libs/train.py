@@ -60,7 +60,6 @@ def training(local_rank, params):
             task.connect_configuration(dict(params.settings))
             hyper_params = [
                 "token_mixing_type",
-                "layers",
                 "dropout",
                 "batch_size",
                 "weight_decay",
@@ -68,7 +67,9 @@ def training(local_rank, params):
                 "lr",
                 "num_warmup_epochs",
             ]
-            task.connect({k: params.settings[k] for k in hyper_params})
+            hp = {k: params.settings[k] for k in hyper_params}
+            hp.update({f"layer{i}_{k}": v for i, w in enumerate(params.settings["layer"]) for k, v in w.items()})
+            task.connect(hp)
 
     train_loader, val_loader, num_classes, image_size, channels = get_dataflow(params)
 
