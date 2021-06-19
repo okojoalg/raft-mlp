@@ -2,7 +2,7 @@ seed: 543
 checkpoint_every: 1000
 log_every_iters: 15
 dataset_name: cifar10
-data_path: /data
+data_path: /datasets
 in_channels: 3
 layers:
   - depth: 2
