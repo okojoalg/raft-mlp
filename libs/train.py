@@ -4,6 +4,7 @@ from pathlib import Path
 import ignite
 import ignite.distributed as idist
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from ignite.contrib.engines import common
 from ignite.contrib.handlers import ClearMLLogger, CosineAnnealingScheduler, ConcatScheduler, LinearCyclicalScheduler
@@ -79,7 +80,7 @@ def training(local_rank, params):
         params.settings.num_classes = num_classes
         params.settings.image_size = image_size
         params.settings.channels = channels
-    model, optimizer, criterion, lr_scheduler = initialize(params)
+    model, optimizer, criterion, eval_criterion, lr_scheduler = initialize(params)
 
     trainer = create_trainer(model, optimizer, criterion, lr_scheduler,
                              train_loader.sampler, params, logger, clearml_logger)
@@ -88,6 +89,7 @@ def training(local_rank, params):
         "accuracy": Accuracy(),
         "top5-accuracy": TopKCategoricalAccuracy(k=5),
         "loss": Loss(criterion),
+        "cross-entropy": Loss(eval_criterion),
     }
 
     evaluator = create_evaluator(model, metrics=metrics, params=params)
@@ -120,7 +122,7 @@ def training(local_rank, params):
             evaluator,
             event_name=Events.EPOCH_COMPLETED,
             tag='validation/loss',
-            metric_names=['loss'],
+            metric_names=['loss', 'cross-entropy'],
             global_step_transform=global_step_from_engine(trainer, Events.EPOCH_COMPLETED),
         )
         clearml_logger.attach_output_handler(
@@ -206,6 +208,7 @@ def initialize(params):
     criterion = LabelSmoothingCrossEntropyLoss(
         alpha=params.settings.label_smoothing_alpha
     ).to(idist.device())
+    eval_criterion = nn.CrossEntropyLoss().to(idist.device())
 
     le = params.settings.num_iters_per_epoch
 
@@ -214,7 +217,7 @@ def initialize(params):
     lr_scheduler2 = CosineAnnealingScheduler(optimizer, "lr", start_value=params.settings.lr, end_value=params.settings.end_lr,
                                              cycle_size=le * (params.settings.num_epochs - params.settings.num_warmup_epochs))
     lr_scheduler = ConcatScheduler(schedulers=[lr_scheduler1, lr_scheduler2], durations=[le * params.settings.num_warmup_epochs, ])
-    return model, optimizer, criterion, lr_scheduler
+    return model, optimizer, criterion, eval_criterion, lr_scheduler
 
 
 def log_metrics(logger, epoch, elapsed, tag, metrics):
