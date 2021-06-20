@@ -1,23 +1,9 @@
 import os
 from abc import ABC
 
-import numpy as np
-from PIL import Image
+from randaugment import RandAugment
 from torchvision import datasets
 from torchvision.transforms import transforms
-from randaugment import RandAugment
-import albumentations.augmentations.transforms as al
-
-
-class Cutout(object):
-    def __init__(self, num_holes=8, max_h_size=8, max_w_size=8, fill_value=0, always_apply=False, p=0.5):
-        self.cutout = al.Cutout(num_holes, max_h_size, max_w_size, fill_value, always_apply, p)
-
-    def __call__(self, image):
-        image_np = np.array(image)
-        augmented = self.cutout(image=image_np)
-        image = Image.fromarray(augmented['image'])
-        return image
 
 
 class DatasetGetter(ABC):
@@ -91,7 +77,6 @@ class ImageNetGetter():
             transforms.RandomCrop(224),
             transforms.RandomHorizontalFlip(),
             RandAugment(),
-            Cutout(num_holes=1, max_h_size=112, max_w_size=112),
             transforms.ToTensor(),
             transforms.Normalize((0.485, 0.456, 0.406),
                                  (0.229, 0.224, 0.225)),

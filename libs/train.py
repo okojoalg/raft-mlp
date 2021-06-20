@@ -6,18 +6,19 @@ import ignite.distributed as idist
 import torch
 import torch.optim as optim
 from ignite.contrib.engines import common
-from ignite.contrib.handlers import ClearMLLogger, PiecewiseLinear, CosineAnnealingScheduler, ConcatScheduler, LinearCyclicalScheduler
+from ignite.contrib.handlers import ClearMLLogger, CosineAnnealingScheduler, ConcatScheduler, LinearCyclicalScheduler
 from ignite.contrib.handlers.clearml_logger import ClearMLSaver
 from ignite.engine import Engine, Events
 from ignite.handlers import DiskSaver, Checkpoint, global_step_from_engine
 from ignite.metrics import Loss, Accuracy, TopKCategoricalAccuracy
 from ignite.utils import manual_seed, setup_logger
 from omegaconf import open_dict
-from torch import nn
 from torch.cuda.amp import GradScaler, autocast
 
+from libs.augmentations import Mixup
 from libs.const import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
+from libs.losses import LabelSmoothingCrossEntropyLoss
 from libs.models import PyramidMixer
 
 
@@ -202,7 +203,9 @@ def initialize(params):
         weight_decay=params.settings.weight_decay,
     )
     optimizer = idist.auto_optim(optimizer)
-    criterion = nn.CrossEntropyLoss().to(idist.device())
+    criterion = LabelSmoothingCrossEntropyLoss(
+        alpha=params.settings.label_smoothing_alpha
+    ).to(idist.device())
 
     le = params.settings.num_iters_per_epoch
 
@@ -255,11 +258,18 @@ def create_trainer(model, optimizer, criterion, lr_scheduler, train_sampler, par
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
 
+        if params.settings.mixup_alpha > 0.:
+            mixup = Mixup(alpha=params.settings.mixup_alpha)
+            x, y1, y2 = mixup.mix(x, y)
+
         model.train()
 
         with autocast(enabled=with_amp):
             y_pred = model(x)
-            loss = criterion(y_pred, y)
+            if params.settings.mixup_alpha > 0.:
+                loss = mixup.criterion(criterion, y_pred, y1, y2)
+            else:
+                loss = criterion(y_pred, y)
 
         optimizer.zero_grad()
         scaler.scale(loss).backward()
