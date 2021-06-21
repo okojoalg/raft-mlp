@@ -26,7 +26,7 @@ end_lr: 1e-5
 weight_decay: 0.05
 num_epochs: 310
 num_warmup_epochs: 10
-validate_every: 10
+validate_every: 1
 stop_iteration:
 project_name: pyramid-mixer
 task_name: imagenet-org-tm
