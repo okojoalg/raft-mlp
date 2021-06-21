@@ -24,8 +24,8 @@ num_workers: 20
 lr: 0.001
 end_lr: 1e-5
 weight_decay: 0.05
-num_epochs: 310
-num_warmup_epochs: 10
+num_epochs: 155
+num_warmup_epochs: 5
 validate_every: 1
 stop_iteration:
 project_name: pyramid-mixer
