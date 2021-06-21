@@ -23,7 +23,7 @@ num_warmup_epochs: 10
 validate_every: 10
 stop_iteration:
 project_name: pyramid-mixer
-task_name: imagenet-ch
+task_name: imagenet-org-mixer
 backend:
 resume_from:
 nproc_per_node:
