@@ -1,10 +1,11 @@
 from abc import ABC
+from functools import reduce
 from typing import List, Dict
 
 from torch import nn
 from einops.layers.torch import Rearrange, Reduce
 
-from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_HW_LN_CODIM, TOKEN_MIXING_TYPES, ORIGINAL
+from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_LN_CODIM_TM, TOKEN_MIXING_TYPES, ORIGINAL_TM
 
 
 class Block(nn.Module):
@@ -118,24 +119,29 @@ class PyramidMixer(nn.Module):
             num_classes: int = 1000,
             expansion_factor: int = 4,
             dropout: float = 0.,
-            token_mixing_type: str = SEP_HW_LN_CODIM,
+            token_mixing_type: str = SEP_LN_CODIM_TM,
+            shortcut: bool = True
     ):
         assert token_mixing_type in TOKEN_MIXING_TYPES
-        for layer in layers:
+        for i, layer in enumerate(layers):
             assert DEPTH in layer
             assert DIM in layer
             assert PATCH_SIZE in layer
+            assert 0 < layer.get(DIM)
         super().__init__()
-        if token_mixing_type == ORIGINAL:
+        self.layers = layers
+        self.shortcut = shortcut
+        if token_mixing_type == ORIGINAL_TM:
             level = OriginalLevel
-        elif token_mixing_type == SEP_HW_LN_CODIM:
+        elif token_mixing_type == SEP_LN_CODIM_TM:
             level = SeparateLNCodimLevel
         else:
             level = SeparateLNChannelLevel
-        modules = []
-        for i, layer in enumerate(layers):
-            modules.append(level(
-                in_channels if i == 0 else layers[i - 1].get(DIM),
+        levels = []
+        heads = []
+        for i, layer in enumerate(self.layers):
+            levels.append(level(
+                in_channels if i == 0 else self.layers[i - 1].get(DIM),
                 layer.get(DIM),
                 depth=layer.get(DEPTH),
                 image_size=image_size,
@@ -143,15 +149,26 @@ class PyramidMixer(nn.Module):
                 expansion_factor=expansion_factor,
                 dropout=dropout,
             ))
+            heads_seq = []
+            if self.shortcut or len(self.layers) == i + 1:
+                heads_seq.append(Rearrange('b c h w -> b h w c'))
+                heads_seq.append(nn.LayerNorm(layer.get(DIM)))
+                heads_seq.append(Reduce('b h w c -> b c', 'mean'))
+                if layer.get(DIM) != self.layers[-1].get(DIM):
+                    heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM)))
+            heads.append(nn.Sequential(*heads_seq))
             image_size = image_size // layer.get(PATCH_SIZE)
-        self.levels = nn.Sequential(*modules)
-        self.head = nn.Sequential(*[
-            Rearrange('b c h w -> b h w c', c=layers[-1].get(DIM)),
-            nn.LayerNorm(layers[-1].get(DIM)),
-            Reduce('b h w c -> b c', 'mean'),
-            nn.Linear(layers[-1].get(DIM), num_classes)
-        ])
+        self.levels = nn.ModuleList(levels)
+        self.heads = nn.ModuleList(heads)
+        self.classifier = nn.Linear(self.layers[-1].get(DIM), num_classes)
 
     def forward(self, input):
-        output = self.levels(input)
-        return self.head(output)
+        output = []
+        for i, layer in enumerate(self.layers):
+            input = self.levels[i](input)
+            if self.shortcut:
+                output.append(self.heads[i](input))
+            else:
+                output.append(self.heads[0](input))
+        output = reduce(lambda a, b: a + b, output)
+        return self.classifier(output)

@@ -5,12 +5,12 @@ PATCH_SIZE = 'patch_size'
 LOGGER_NAME = 'Pyramid-Mixer'
 DIM = 'dim'
 DEPTH = 'depth'
-SEP_HW_LN_CODIM = 'sep_hw_ln_codim'
-SEP_HW_LN_C = 'sep_hw_ln_c'
-ORIGINAL = 'original'
+SEP_LN_CODIM_TM = 'sep_ln_codim_tm'
+SEP_LN_CH_TM = 'sep_ln_ch_tm'
+ORIGINAL_TM = 'original_tm'
 
 TOKEN_MIXING_TYPES = [
-    SEP_HW_LN_CODIM,
-    SEP_HW_LN_C,
-    ORIGINAL,
+    SEP_LN_CODIM_TM,
+    SEP_LN_CH_TM,
+    ORIGINAL_TM,
 ]

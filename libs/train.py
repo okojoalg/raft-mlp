@@ -25,7 +25,7 @@ from libs.models import PyramidMixer
 
 def training(local_rank, params):
     rank = idist.get_rank()
-    manual_seed(params.settings.seed + rank)
+    manual_seed(params.seed + rank)
     device = idist.device()
 
     logger = setup_logger(name=LOGGER_NAME, distributed_rank=local_rank)
@@ -71,6 +71,7 @@ def training(local_rank, params):
             ]
             hp = {k: params.settings[k] for k in hyper_params}
             hp.update({f"layer{i}_{k}": v for i, w in enumerate(params.settings["layers"]) for k, v in w.items()})
+            hp.update({"seed": params.seed})
             task.connect(hp)
 
     train_loader, val_loader, num_classes, image_size, channels = get_dataflow(params)
@@ -195,7 +196,8 @@ def initialize(params):
         num_classes=params.settings.num_classes,
         expansion_factor=params.settings.expansion_factor,
         dropout=params.settings.dropout,
-        token_mixing_type=params.settings.token_mixing_type
+        token_mixing_type=params.settings.token_mixing_type,
+        shortcut=params.settings.shortcut,
     )
     model = idist.auto_model(model)
 
