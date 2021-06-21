@@ -94,12 +94,9 @@ def training(local_rank, params):
     }
 
     evaluator = create_evaluator(model, metrics=metrics, params=params)
-    train_evaluator = create_evaluator(model, metrics=metrics, params=params)
 
     def run_validation(engine):
         epoch = trainer.state.epoch
-        state = train_evaluator.run(train_loader)
-        log_metrics(logger, epoch, state.times["COMPLETED"], "Train", state.metrics)
         state = evaluator.run(val_loader)
         log_metrics(logger, epoch, state.times["COMPLETED"], "Test", state.metrics)
 
@@ -111,13 +108,6 @@ def training(local_rank, params):
             tag='training/loss',
             metric_names=['loss'],
             global_step_transform=global_step_from_engine(trainer, Events.ITERATION_COMPLETED),
-        )
-        clearml_logger.attach_output_handler(
-            train_evaluator,
-            event_name=Events.EPOCH_COMPLETED,
-            tag='train/accuracy',
-            metric_names=['accuracy', 'top5-accuracy'],
-            global_step_transform=global_step_from_engine(trainer, Events.EPOCH_COMPLETED),
         )
         clearml_logger.attach_output_handler(
             evaluator,
