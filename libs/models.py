@@ -161,8 +161,9 @@ class PyramidMixer(nn.Module):
             if self.shortcut or len(self.layers) == i + 1:
                 heads_seq.append(Rearrange('b c h w -> b h w c'))
                 heads_seq.append(nn.LayerNorm(layer.get(DIM)))
+                heads_seq.append(Rearrange('b h w c -> b c h w'))
                 if gap or len(self.layers) != i + 1:
-                    heads_seq.append(Reduce('b h w c -> b c', 'mean'))
+                    heads_seq.append(Reduce('b c h w -> b c', 'mean'))
                 if len(self.layers) != i + 1:
                     heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM) * 2))
             heads.append(nn.Sequential(*heads_seq))
@@ -181,7 +182,9 @@ class PyramidMixer(nn.Module):
                 output.append(self.heads[i](input))
             else:
                 output.append(self.heads[0](input))
-        output = reduce(lambda a, b: b[:, :self.layers[-1].get(DIM)] * a + b[:, self.layers[-1].get(DIM):], output[::-1])
+        output = reduce(
+            lambda a, b: b[:, :self.layers[-1].get(DIM)].view(-1, self.layers[-1].get(DIM), 1, 1) * a
+                         + b[:, self.layers[-1].get(DIM):].view(-1, self.layers[-1].get(DIM), 1, 1), output[::-1])
         if not self.gap:
             output = self.flatten(output)
         return self.classifier(output)
