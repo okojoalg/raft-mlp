@@ -188,6 +188,7 @@ def initialize(params):
         dropout=params.settings.dropout,
         token_mixing_type=params.settings.token_mixing_type,
         shortcut=params.settings.shortcut,
+        gap=params.settings.gap,
     )
     model = idist.auto_model(model)
 

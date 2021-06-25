@@ -19,6 +19,7 @@ layers:
     patch_size: 2
 expansion_factor: 4
 shortcut: True
+gap: False
 dropout: 0.
 mixup_alpha: 0.5
 label_smoothing_alpha: 0.1

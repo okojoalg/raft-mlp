@@ -30,6 +30,7 @@ def run_summary(params: DictConfig) -> None:
         dropout=params.settings.dropout,
         token_mixing_type=params.settings.token_mixing_type,
         shortcut=params.settings.shortcut,
+        gap=params.settings.gap,
     )
     input_size = (dg.channels, dg.image_size, dg.image_size)
     torchinfo.summary(model, input_size=(1, *input_size))
