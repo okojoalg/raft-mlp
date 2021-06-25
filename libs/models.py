@@ -155,7 +155,7 @@ class PyramidMixer(nn.Module):
                 heads_seq.append(nn.LayerNorm(layer.get(DIM)))
                 heads_seq.append(Reduce('b h w c -> b c', 'mean'))
                 if layer.get(DIM) != self.layers[-1].get(DIM):
-                    heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM)))
+                    heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM) * 2))
             heads.append(nn.Sequential(*heads_seq))
             image_size = image_size // layer.get(PATCH_SIZE)
         self.levels = nn.ModuleList(levels)
@@ -170,5 +170,5 @@ class PyramidMixer(nn.Module):
                 output.append(self.heads[i](input))
             else:
                 output.append(self.heads[0](input))
-        output = reduce(lambda a, b: a + b, output)
+        output = reduce(lambda a, b: b[:, :self.layers[-1].get(DIM)] * a + b[:, self.layers[-1].get(DIM):], output[::-1])
         return self.classifier(output)
