@@ -1,8 +1,10 @@
+import math
 from abc import ABC
 from functools import reduce
 from typing import List, Dict
 
 from torch import nn
+import torch.nn.functional as F
 from einops.layers.torch import Rearrange, Reduce
 
 from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_LN_CODIM_TM, TOKEN_MIXING_TYPES, ORIGINAL_TM
@@ -41,9 +43,14 @@ class Block(nn.Module):
 class Level(nn.Module, ABC):
     def __init__(self, image_size=224, patch_size=4):
         super().__init__()
-        self._h = self._w = image_size // patch_size
+        self.patch_size = patch_size
+        self._bh = self._bw = image_size // patch_size
+        self._h = self._w = math.ceil(image_size / patch_size)
 
     def forward(self, input):
+        if not (self._bh == self._h and self._bw == self._w):
+            input = F.interpolate(input, (self._h * self.patch_size, self._w * self.patch_size), mode='bilinear', align_corners=False)
+        print(input.shape)
         return self.fn(input)
 
 
@@ -154,10 +161,10 @@ class PyramidMixer(nn.Module):
                 heads_seq.append(Rearrange('b c h w -> b h w c'))
                 heads_seq.append(nn.LayerNorm(layer.get(DIM)))
                 heads_seq.append(Reduce('b h w c -> b c', 'mean'))
-                if layer.get(DIM) != self.layers[-1].get(DIM):
+                if len(self.layers) != i + 1:
                     heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM) * 2))
             heads.append(nn.Sequential(*heads_seq))
-            image_size = image_size // layer.get(PATCH_SIZE)
+            image_size = math.ceil(image_size / layer.get(PATCH_SIZE))
         self.levels = nn.ModuleList(levels)
         self.heads = nn.ModuleList(heads)
         self.classifier = nn.Linear(self.layers[-1].get(DIM), num_classes)
