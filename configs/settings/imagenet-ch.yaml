@@ -5,14 +5,17 @@ data_path: /datasets/imagenet
 token_mixing_type: sep_ln_ch_tm
 in_channels: 3
 layers:
-  - depth: 3
-    dim: 384
-    patch_size: 8
-  - depth: 6
+  - depth: 4
+    dim: 768
+    patch_size: 16
+  - depth: 4
     dim: 768
     patch_size: 2
-  - depth: 3
-    dim: 1024
+  - depth: 2
+    dim: 768
+    patch_size: 2
+  - depth: 2
+    dim: 768
     patch_size: 2
 expansion_factor: 4
 shortcut: True
