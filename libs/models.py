@@ -1,8 +1,10 @@
+import math
 from abc import ABC
 from functools import reduce
 from typing import List, Dict
 
 from torch import nn
+import torch.nn.functional as F
 from einops.layers.torch import Rearrange, Reduce
 
 from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_LN_CODIM_TM, TOKEN_MIXING_TYPES, ORIGINAL_TM
@@ -41,9 +43,13 @@ class Block(nn.Module):
 class Level(nn.Module, ABC):
     def __init__(self, image_size=224, patch_size=4):
         super().__init__()
-        self._h = self._w = image_size // patch_size
+        self.patch_size = patch_size
+        self._bh = self._bw = image_size // patch_size
+        self._h = self._w = math.ceil(image_size / patch_size)
 
     def forward(self, input):
+        if not (self._bh == self._h and self._bw == self._w):
+            input = F.interpolate(input, (self._h * self.patch_size, self._w * self.patch_size), mode='bilinear', align_corners=False)
         return self.fn(input)
 
 
@@ -120,7 +126,8 @@ class PyramidMixer(nn.Module):
             expansion_factor: int = 4,
             dropout: float = 0.,
             token_mixing_type: str = SEP_LN_CODIM_TM,
-            shortcut: bool = True
+            shortcut: bool = True,
+            gap: bool = False,
     ):
         assert token_mixing_type in TOKEN_MIXING_TYPES
         for i, layer in enumerate(layers):
@@ -131,6 +138,7 @@ class PyramidMixer(nn.Module):
         super().__init__()
         self.layers = layers
         self.shortcut = shortcut
+        self.gap = gap
         if token_mixing_type == ORIGINAL_TM:
             level = OriginalLevel
         elif token_mixing_type == SEP_LN_CODIM_TM:
@@ -153,14 +161,18 @@ class PyramidMixer(nn.Module):
             if self.shortcut or len(self.layers) == i + 1:
                 heads_seq.append(Rearrange('b c h w -> b h w c'))
                 heads_seq.append(nn.LayerNorm(layer.get(DIM)))
-                heads_seq.append(Reduce('b h w c -> b c', 'mean'))
-                if layer.get(DIM) != self.layers[-1].get(DIM):
-                    heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM)))
+                heads_seq.append(Rearrange('b h w c -> b c h w'))
+                if gap or len(self.layers) != i + 1:
+                    heads_seq.append(Reduce('b c h w -> b c', 'mean'))
+                if len(self.layers) != i + 1:
+                    heads_seq.append(nn.Linear(layer.get(DIM), self.layers[-1].get(DIM) * 2))
             heads.append(nn.Sequential(*heads_seq))
-            image_size = image_size // layer.get(PATCH_SIZE)
+            image_size = math.ceil(image_size / layer.get(PATCH_SIZE))
         self.levels = nn.ModuleList(levels)
         self.heads = nn.ModuleList(heads)
-        self.classifier = nn.Linear(self.layers[-1].get(DIM), num_classes)
+        self.classifier = nn.Linear(self.layers[-1].get(DIM) if gap else self.layers[-1].get(DIM) * (image_size ** 2), num_classes)
+        if not gap:
+            self.flatten = nn.Flatten()
 
     def forward(self, input):
         output = []
@@ -170,5 +182,9 @@ class PyramidMixer(nn.Module):
                 output.append(self.heads[i](input))
             else:
                 output.append(self.heads[0](input))
-        output = reduce(lambda a, b: a + b, output)
+        output = reduce(
+            lambda a, b: b[:, :self.layers[-1].get(DIM)].view(-1, self.layers[-1].get(DIM), 1, 1) * a
+                         + b[:, self.layers[-1].get(DIM):].view(-1, self.layers[-1].get(DIM), 1, 1), output[::-1])
+        if not self.gap:
+            output = self.flatten(output)
         return self.classifier(output)
