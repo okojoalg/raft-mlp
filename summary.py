@@ -6,7 +6,7 @@ from ptflops import get_model_complexity_info
 
 from libs.const import IMAGENET, CIFAR10, CIFAR100
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
-from libs.models import PyramidMixer
+from libs.models import S3CMLP
 
 
 @hydra.main(config_path="configs", config_name="config")
@@ -21,7 +21,7 @@ def run_summary(params: DictConfig) -> None:
         dg = CIFAR100Getter()
     else:
         raise ValueError("Invalid dataset name")
-    model = PyramidMixer(
+    model = S3CMLP(
         layers=params.settings.layers,
         in_channels=dg.channels,
         image_size=dg.image_size,

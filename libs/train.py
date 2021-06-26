@@ -20,7 +20,7 @@ from libs.augmentations import Mixup
 from libs.const import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.losses import LabelSmoothingCrossEntropyLoss
-from libs.models import PyramidMixer
+from libs.models import S3CMLP
 
 
 def training(local_rank, params):
@@ -179,7 +179,7 @@ def get_dataflow(params):
 
 
 def initialize(params):
-    model = PyramidMixer(
+    model = S3CMLP(
         layers=params.settings.layers,
         in_channels=params.settings.channels,
         image_size=params.settings.image_size,

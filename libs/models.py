@@ -7,27 +7,13 @@ from torch import nn
 import torch.nn.functional as F
 from einops.layers.torch import Rearrange, Reduce
 
-from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_LN_CODIM_TM, TOKEN_MIXING_TYPES, ORIGINAL_TM
+from libs.const import PATCH_SIZE, DIM, DEPTH, SEP_LN_CODIM_TM, TOKEN_MIXING_TYPES, ORIGINAL_TM, SEP_LN_CH_TM, SER_PM, ADDITIONAL_CHANNELS
 
 
 class Block(nn.Module):
-    def __init__(self, dim, norm_dim, expansion_factor=4, dropout=0., channel_norm=False):
+    def __init__(self, dim, expansion_factor=4, dropout=0.):
         super().__init__()
-        if dim == norm_dim:
-            self.norm = nn.LayerNorm(norm_dim)
-        elif channel_norm:
-            self.norm = nn.Sequential(*[
-                Rearrange('b (c o1) o2 -> b (o1 o2) c', c=norm_dim, o2=dim),
-                nn.LayerNorm(norm_dim),
-                Rearrange('b (o1 o2) c -> b (c o1) o2', c=norm_dim, o2=dim),
-            ])
-        else:
-            self.norm = nn.Sequential(*[
-                Rearrange('b c o -> b o c'),
-                nn.LayerNorm(norm_dim),
-                Rearrange('b o c -> b c o'),
-            ])
-
+        self.norm = nn.Identity()
         self.fn = nn.Sequential(
             nn.Linear(dim, dim * expansion_factor),
             nn.GELU(),
@@ -40,10 +26,47 @@ class Block(nn.Module):
         return self.fn(self.norm(x)) + x
 
 
+class ChannelBlock(Block):
+    def __init__(self, dim, expansion_factor=4, dropout=0.):
+        super().__init__(dim, expansion_factor, dropout)
+        self.norm = nn.LayerNorm(dim)
+
+
+class TokenBlock(Block):
+    def __init__(self, dim, channels, expansion_factor=4, dropout=0.):
+        super().__init__(dim, expansion_factor, dropout)
+        self.norm = nn.Sequential(*[
+            Rearrange('b c o -> b o c'),
+            nn.LayerNorm(channels),
+            Rearrange('b o c -> b c o'),
+        ])
+
+
+class SpatiallySeparatedTokenBlock(Block):
+    def __init__(self, dim, channels, expansion_factor=4, dropout=0.):
+        super().__init__(dim, expansion_factor, dropout)
+        self.norm = nn.Sequential(*[
+            Rearrange('b (c o1) o2 -> b (o1 o2) c', c=channels, o2=dim),
+            nn.LayerNorm(channels),
+            Rearrange('b (o1 o2) c -> b (c o1) o2', c=channels, o2=dim),
+        ])
+
+
+class PermutedBlock(Block):
+    def __init__(self, spatial_dim, channels, additional_channels, expansion_factor=4, dropout=0.):
+        super().__init__(spatial_dim * additional_channels, expansion_factor, dropout)
+        self.norm = nn.Sequential(*[
+            Rearrange('b (c1 o1) (c2 o2) -> b (o1 o2) (c1 c2)', c1=channels // additional_channels, c2=additional_channels, o2=spatial_dim),
+            nn.LayerNorm(channels),
+            Rearrange('b (o1 o2) (c1 c2) -> b (c1 o1) (c2 o2)', c1=channels // additional_channels, c2=additional_channels, o2=spatial_dim),
+        ])
+
+
 class Level(nn.Module, ABC):
     def __init__(self, image_size=224, patch_size=4):
         super().__init__()
         self.patch_size = patch_size
+        self.fn = nn.Identity()
         self._bh = self._bw = image_size // patch_size
         self._h = self._w = math.ceil(image_size / patch_size)
 
@@ -53,45 +76,69 @@ class Level(nn.Module, ABC):
         return self.fn(input)
 
 
-class SeparateLNCodimLevel(Level):
+class SeparatedLNCodimLevel(Level):
     def __init__(self, in_channels, out_channels, depth=4, image_size=224, patch_size=4, expansion_factor=4,
                  dropout=0.):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(*[
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            nn.Linear((patch_size ** 2) * in_channels, out_channels),
+            nn.Linear((patch_size ** 2) * in_channels, out_channels) if patch_size != 1 or (patch_size == 1 and in_channels == out_channels) else nn.Identity(),
             *[nn.Sequential(*[
-                # height mixer
+                # vertical mixer
                 Rearrange('b (h w) c -> b (c w) h', h=self._h),
-                Block(self._h, out_channels * self._w, expansion_factor, dropout),
-                # width mixer
+                TokenBlock(self._h, out_channels * self._w, expansion_factor, dropout),
+                # horizontal mixer
                 Rearrange('b (c w) h -> b (c h) w', h=self._h, w=self._w),
-                Block(self._w, out_channels * self._h, expansion_factor, dropout),
+                TokenBlock(self._w, out_channels * self._h, expansion_factor, dropout),
                 # channel mixer
                 Rearrange('b (c h) w -> b (h w) c', h=self._h, w=self._w),
-                Block(out_channels, out_channels, expansion_factor, dropout),
+                ChannelBlock(out_channels, expansion_factor, dropout),
             ])
               for _ in range(depth)],
             Rearrange('b (h w) c -> b c h w', h=self._h, w=self._w)])
 
 
-class SeparateLNChannelLevel(Level):
+class SeparatedLNChannelLevel(Level):
     def __init__(self, in_channels, out_channels, depth=4, image_size=224, patch_size=4, expansion_factor=4,
                  dropout=0.):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(*[
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            nn.Linear((patch_size ** 2) * in_channels, out_channels),
+            nn.Linear((patch_size ** 2) * in_channels, out_channels) if patch_size != 1 or (patch_size == 1 and in_channels == out_channels) else nn.Identity(),
             *[nn.Sequential(*[
-                # height mixer
+                # vertical mixer
                 Rearrange('b (h w) c -> b (c w) h', h=self._h),
-                Block(self._h, out_channels, expansion_factor, dropout, channel_norm=True),
-                # width mixer
+                SpatiallySeparatedTokenBlock(self._h, out_channels, expansion_factor, dropout),
+                # horizontal mixer
                 Rearrange('b (c w) h -> b (c h) w', h=self._h, w=self._w),
-                Block(self._w, out_channels, expansion_factor, dropout, channel_norm=True),
+                SpatiallySeparatedTokenBlock(self._w, out_channels, expansion_factor, dropout),
                 # channel mixer
                 Rearrange('b (c h) w -> b (h w) c', h=self._h, w=self._w),
-                Block(out_channels, out_channels, expansion_factor, dropout),
+                ChannelBlock(out_channels, expansion_factor, dropout),
+            ])
+              for _ in range(depth)],
+            Rearrange('b (h w) c -> b c h w', h=self._h, w=self._w)])
+
+
+class SerialPermutedLevel(Level):
+    def __init__(self, in_channels, out_channels, depth=4, image_size=224, patch_size=4, expansion_factor=4,
+                 dropout=0., additional_channels=4):
+        super().__init__(image_size, patch_size)
+
+        assert out_channels % additional_channels == 0
+        self.fn = nn.Sequential(*[
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
+            nn.Linear((patch_size ** 2) * in_channels, out_channels) if patch_size != 1 or (patch_size == 1 and in_channels == out_channels) else nn.Identity(),
+            *[nn.Sequential(*[
+                # vertical-channel mixer
+                Rearrange('b (h w) (chw co) -> b (co w) (chw h)', h=self._h, w=self._w, chw=additional_channels),
+                PermutedBlock(self._h, out_channels, additional_channels, expansion_factor, dropout),
+                # horizontal-channel mixer
+                Rearrange('b (co w) (chw h) -> b (co h) (chw w)', h=self._h, w=self._w, chw=additional_channels),
+                PermutedBlock(self._w, out_channels, additional_channels, expansion_factor, dropout),
+                # channel mixer
+                Rearrange('b (co h) (chw w) -> b (h w) (chw co)', h=self._h, w=self._w, chw=additional_channels),
+                ChannelBlock(out_channels, expansion_factor, dropout),
             ])
               for _ in range(depth)],
             Rearrange('b (h w) c -> b c h w', h=self._h, w=self._w)])
@@ -107,16 +154,16 @@ class OriginalLevel(Level):
             *[nn.Sequential(*[
                 # token mixer
                 Rearrange('b (h w) c -> b c (h w)', h=self._h, w=self._w),
-                Block(self._h * self._w, out_channels, expansion_factor, dropout),
+                TokenBlock(self._h * self._w, out_channels, expansion_factor, dropout),
                 # channel mixer
                 Rearrange('b c (h w) -> b (h w) c', h=self._h, w=self._w),
-                Block(out_channels, out_channels, expansion_factor, dropout),
+                ChannelBlock(out_channels, expansion_factor, dropout),
             ])
               for _ in range(depth)],
             Rearrange('b (h w) c -> b c h w', h=self._h, w=self._w)])
 
 
-class PyramidMixer(nn.Module):
+class S3CMLP(nn.Module):
     def __init__(
             self,
             layers: List[Dict],
@@ -125,7 +172,7 @@ class PyramidMixer(nn.Module):
             num_classes: int = 1000,
             expansion_factor: int = 4,
             dropout: float = 0.,
-            token_mixing_type: str = SEP_LN_CODIM_TM,
+            token_mixing_type: str = SER_PM,
             shortcut: bool = True,
             gap: bool = False,
     ):
@@ -134,6 +181,7 @@ class PyramidMixer(nn.Module):
             assert DEPTH in layer
             assert DIM in layer
             assert PATCH_SIZE in layer
+            assert token_mixing_type != SER_PM or ADDITIONAL_CHANNELS in layer
             assert 0 < layer.get(DIM)
         super().__init__()
         self.layers = layers
@@ -142,21 +190,26 @@ class PyramidMixer(nn.Module):
         if token_mixing_type == ORIGINAL_TM:
             level = OriginalLevel
         elif token_mixing_type == SEP_LN_CODIM_TM:
-            level = SeparateLNCodimLevel
+            level = SeparatedLNCodimLevel
+        elif token_mixing_type == SEP_LN_CH_TM:
+            level = SeparatedLNChannelLevel
         else:
-            level = SeparateLNChannelLevel
+            level = SerialPermutedLevel
         levels = []
         heads = []
         for i, layer in enumerate(self.layers):
-            levels.append(level(
-                in_channels if i == 0 else self.layers[i - 1].get(DIM),
-                layer.get(DIM),
-                depth=layer.get(DEPTH),
-                image_size=image_size,
-                patch_size=layer.get(PATCH_SIZE),
-                expansion_factor=expansion_factor,
-                dropout=dropout,
-            ))
+            params = {
+                "in_channels": in_channels if i == 0 else self.layers[i - 1].get(DIM),
+                "out_channels": layer.get(DIM),
+                "depth": layer.get(DEPTH),
+                "image_size": image_size,
+                "patch_size": layer.get(PATCH_SIZE),
+                "expansion_factor": expansion_factor,
+                "dropout": dropout,
+            }
+            if token_mixing_type == SER_PM:
+                params["additional_channels"] = layer.get(ADDITIONAL_CHANNELS)
+            levels.append(level(**params))
             heads_seq = []
             if self.shortcut or len(self.layers) == i + 1:
                 heads_seq.append(Rearrange('b c h w -> b h w c'))
@@ -182,9 +235,11 @@ class PyramidMixer(nn.Module):
                 output.append(self.heads[i](input))
             else:
                 output.append(self.heads[0](input))
-        output = reduce(
-            lambda a, b: b[:, :self.layers[-1].get(DIM)].view(-1, self.layers[-1].get(DIM), 1, 1) * a
-                         + b[:, self.layers[-1].get(DIM):].view(-1, self.layers[-1].get(DIM), 1, 1), output[::-1])
+        output = reduce(lambda a, b: b[:, :self.layers[-1].get(DIM)] * a + b[:, self.layers[-1].get(DIM):], output[::-1]) \
+            if self.gap \
+            else reduce(lambda a, b: b[:, :self.layers[-1].get(DIM)].view(-1, self.layers[-1].get(DIM), 1, 1) * a
+                                     + b[:, self.layers[-1].get(DIM):].view(-1, self.layers[-1].get(DIM), 1, 1),
+                        output[::-1])
         if not self.gap:
             output = self.flatten(output)
         return self.classifier(output)
