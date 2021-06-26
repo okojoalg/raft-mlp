@@ -9,7 +9,7 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-    container_name: pyramid-mixer
+    container_name: s3c-mlp
     volumes:
       - .:/workdir
       - data/:/data

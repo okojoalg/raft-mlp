@@ -1,6 +1,6 @@
-# Pyramid Mixer
+# S3C-MLP
 
-This repository contains the training code for Pyramid Mixer.
+This repository contains the training code for S3C-MLP.
 
 ## Require
 

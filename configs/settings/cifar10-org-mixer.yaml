@@ -2,18 +2,15 @@ checkpoint_every: 1000
 log_every_iters: 15
 dataset_name: cifar10
 data_path: /datasets
-token_mixing_type: sep_ln_codim_tm
+token_mixing_type: original_tm
 in_channels: 3
 layers:
-  - depth: 2
-    dim: 128
-    patch_size: 4
-  - depth: 2
+  - depth: 4
     dim: 256
     patch_size: 4
 expansion_factor: 4
-shortcut: True
-gap: False
+shortcut: False
+gap: True
 dropout: 0.
 mixup_alpha: 0.5
 label_smoothing_alpha: 0.1
@@ -26,8 +23,8 @@ num_epochs: 24
 num_warmup_epochs: 4
 validate_every: 1
 stop_iteration:
-project_name: pyramid-mixer
-task_name: cifar10-codim
+project_name: s3c-mlp
+task_name: cifar10-org-mixer
 backend:
 resume_from:
 nproc_per_node:
