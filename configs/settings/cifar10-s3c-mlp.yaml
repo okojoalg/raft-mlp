@@ -14,6 +14,9 @@ shortcut: False
 gap: True
 dropout: 0.
 mixup_alpha: 0.5
+cutmix_alpha: 0.5
+mixup_p: 0.8
+cutmix_p: 1.0
 label_smoothing_alpha: 0.1
 batch_size: 512
 num_workers: 2

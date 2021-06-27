@@ -16,7 +16,7 @@ from ignite.utils import manual_seed, setup_logger
 from omegaconf import open_dict
 from torch.cuda.amp import GradScaler, autocast
 
-from libs.augmentations import Mixup
+from libs.augmentations import CutMixup
 from libs.const import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.losses import LabelSmoothingCrossEntropyLoss
@@ -254,18 +254,21 @@ def create_trainer(model, optimizer, criterion, lr_scheduler, train_sampler, par
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
 
-        if params.settings.mixup_alpha > 0.:
-            mixup = Mixup(alpha=params.settings.mixup_alpha)
-            x, y1, y2 = mixup.mix(x, y)
+        cutmixup = CutMixup(
+            height=params.settings.image_size,
+            width=params.settings.image_size,
+            mixup_alpha=params.settings.mixup_alpha,
+            cutmix_alpha=params.settings.mixup_alpha,
+            mixup_p=params.settings.mixup_p,
+            cutmix_p=params.settings.cutmix_p
+        )
+        x, y = cutmixup.mix(x, y)
 
         model.train()
 
         with autocast(enabled=with_amp):
             y_pred = model(x)
-            if params.settings.mixup_alpha > 0.:
-                loss = mixup.criterion(criterion, y_pred, y1, y2)
-            else:
-                loss = criterion(y_pred, y)
+            loss = cutmixup.criterion(criterion, y_pred, y)
 
         optimizer.zero_grad()
         scaler.scale(loss).backward()

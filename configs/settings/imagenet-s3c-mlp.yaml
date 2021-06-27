@@ -14,6 +14,9 @@ shortcut: False
 gap: True
 dropout: 0.
 mixup_alpha: 0.5
+cutmix_alpha: 0.5
+mixup_p: 0.8
+cutmix_p: 1.0
 label_smoothing_alpha: 0.1
 batch_size: 512
 num_workers: 20
@@ -25,7 +28,7 @@ num_warmup_epochs: 5
 validate_every: 1
 stop_iteration:
 project_name: s3c-mlp
-task_name: imagenet-pm
+task_name: imagenet-s3c-mlp
 backend:
 resume_from:
 nproc_per_node:
