@@ -30,7 +30,7 @@ validate_every: 1
 stop_iteration:
 bucket_name: sscr-mlp
 project_name: sscr-mlp
-task_name: default
+task_name: imagenet-sscr-mlp
 backend:
 resume_from:
 nproc_per_node:

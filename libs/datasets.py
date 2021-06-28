@@ -25,19 +25,25 @@ class DatasetGetter(ABC):
 
 class CIFARGetter(DatasetGetter, ABC):
     def __init__(self):
-        self.train_transform = transforms.Compose([
-            transforms.Pad(4),
-            transforms.RandomCrop(32, fill=128),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406),
-                                 (0.229, 0.224, 0.225)),
-        ])
-        self.test_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406),
-                                 (0.229, 0.224, 0.225)),
-        ])
+        self.train_transform = transforms.Compose(
+            [
+                transforms.Pad(4),
+                transforms.RandomCrop(32, fill=128),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+                ),
+            ]
+        )
+        self.test_transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+                ),
+            ]
+        )
 
     @property
     def image_size(self):
@@ -50,8 +56,18 @@ class CIFARGetter(DatasetGetter, ABC):
 
 class CIFAR10Getter(CIFARGetter):
     def get(self, path):
-        train_ds = datasets.CIFAR10(root=path, train=True, download=True, transform=self.train_transform)
-        val_ds = datasets.CIFAR10(root=path, train=False, download=True, transform=self.test_transform)
+        train_ds = datasets.CIFAR10(
+            root=path,
+            train=True,
+            download=True,
+            transform=self.train_transform,
+        )
+        val_ds = datasets.CIFAR10(
+            root=path,
+            train=False,
+            download=True,
+            transform=self.test_transform,
+        )
         return train_ds, val_ds
 
     @property
@@ -61,8 +77,18 @@ class CIFAR10Getter(CIFARGetter):
 
 class CIFAR100Getter(CIFARGetter):
     def get(self, path):
-        train_ds = datasets.CIFAR100(root=path, train=True, download=True, transform=self.train_transform)
-        val_ds = datasets.CIFAR100(root=path, train=False, download=True, transform=self.test_transform)
+        train_ds = datasets.CIFAR100(
+            root=path,
+            train=True,
+            download=True,
+            transform=self.train_transform,
+        )
+        val_ds = datasets.CIFAR100(
+            root=path,
+            train=False,
+            download=True,
+            transform=self.test_transform,
+        )
         return train_ds, val_ds
 
     @property
@@ -70,30 +96,40 @@ class CIFAR100Getter(CIFARGetter):
         return 100
 
 
-class ImageNetGetter():
+class ImageNetGetter:
     def __init__(self):
-        self.train_transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.RandomCrop(224),
-            transforms.RandomHorizontalFlip(),
-            RandAugment(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406),
-                                 (0.229, 0.224, 0.225)),
-        ])
+        self.train_transform = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.RandomCrop(224),
+                transforms.RandomHorizontalFlip(),
+                RandAugment(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+                ),
+            ]
+        )
 
-        self.test_transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406),
-                                 (0.229, 0.224, 0.225)),
-        ])
+        self.test_transform = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+                ),
+            ]
+        )
 
     def get(self, path):
         assert os.path.exists(path)
-        train_ds = datasets.ImageNet(root=path, split='train', transform=self.train_transform)
-        val_ds = datasets.ImageNet(root=path, split='val', transform=self.test_transform)
+        train_ds = datasets.ImageNet(
+            root=path, split="train", transform=self.train_transform
+        )
+        val_ds = datasets.ImageNet(
+            root=path, split="val", transform=self.test_transform
+        )
         return train_ds, val_ds
 
     @property
