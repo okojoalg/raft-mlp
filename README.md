@@ -1,6 +1,6 @@
-# S3C-MLP
+# SSCR-MLP
 
-This repository contains the training code for S3C-MLP.
+This repository contains the training code for SSCR-MLP.
 
 ## Require
 

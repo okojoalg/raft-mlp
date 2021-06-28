@@ -5,18 +5,23 @@ data_path: /datasets
 token_mixing_type: ser_pm
 in_channels: 3
 layers:
-  - depth: 4
+  - depth: 2
     dim: 256
     patch_size: 4
-    additional_channels: 4
+    raft_size: 4
+  - depth: 2
+    dim: 256
+    patch_size: 4
+    raft_size: 4
 expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
 mixup_alpha: 0.5
-cutmix_alpha: 0.5
+cutmix_alpha: 0.2
 mixup_p: 0.8
 cutmix_p: 1.0
+drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
 batch_size: 512
 num_workers: 2
@@ -27,8 +32,9 @@ num_epochs: 24
 num_warmup_epochs: 4
 validate_every: 1
 stop_iteration:
-project_name: s3c-mlp
-task_name: cifar10-s3c-mlp
+bucket_name: sscr-mlp
+project_name: sscr-mlp
+task_name: cifar10-sscr-mlp
 backend:
 resume_from:
 nproc_per_node:

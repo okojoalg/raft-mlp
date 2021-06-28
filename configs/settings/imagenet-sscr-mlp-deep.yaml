@@ -8,27 +8,29 @@ layers:
   - depth: 36
     dim: 384
     patch_size: 16
-    additional_channels: 12
+    raft_size: 12
 expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
 mixup_alpha: 0.5
-cutmix_alpha: 0.5
+cutmix_alpha: 0.2
 mixup_p: 0.8
 cutmix_p: 1.0
+drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
 batch_size: 512
 num_workers: 20
 lr: 0.001
 end_lr: 1e-5
 weight_decay: 0.05
-num_epochs: 155
+num_epochs: 305
 num_warmup_epochs: 5
 validate_every: 1
 stop_iteration:
-project_name: s3c-mlp
-task_name: imagenet-s3c-mlp-deep
+bucket_name: sscr-mlp
+project_name: sscr-mlp
+task_name: imagenet-sscr-mlp-deep
 backend:
 resume_from:
 nproc_per_node:
