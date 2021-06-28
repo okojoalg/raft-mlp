@@ -19,7 +19,7 @@ mixup_p: 0.8
 cutmix_p: 1.0
 drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
-batch_size: 512
+batch_size: 1024
 num_workers: 20
 lr: 0.001
 end_lr: 1e-5

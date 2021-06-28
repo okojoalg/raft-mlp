@@ -5,11 +5,7 @@ data_path: /datasets
 token_mixing_type: ser_pm
 in_channels: 3
 layers:
-  - depth: 2
-    dim: 256
-    patch_size: 4
-    raft_size: 4
-  - depth: 2
+  - depth: 4
     dim: 256
     patch_size: 4
     raft_size: 4
