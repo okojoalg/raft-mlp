@@ -8,7 +8,7 @@ layers:
   - depth: 36
     dim: 384
     patch_size: 16
-    raft_size: 12
+    raft_size: 6
 expansion_factor: 4
 shortcut: False
 gap: True
