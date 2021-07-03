@@ -30,7 +30,7 @@ class Mixup(Mix):
     def mix(self, x, y):
         if self.enable:
             batch_size = x.size()[0]
-            index = torch.randperm(batch_size).to(x.device)
+            index = torch.randperm(batch_size).to(x.device, non_blocking=True)
             x = self.lamb * x + (1 - self.lamb) * x[index, :]
             y1, y2 = (
                 (y, tuple(y_tensor[index] for y_tensor in y))
@@ -52,7 +52,7 @@ class CutMix(Mix):
     def mix(self, x, y):
         if self.enable:
             batch_size = x.size()[0]
-            index = torch.randperm(batch_size).to(x.device)
+            index = torch.randperm(batch_size).to(x.device, non_blocking=True)
             h1, h2, w1, w2 = self.get_bbox()
             x[:, :, h1:h2, w1:w2] = x[index, :, h1:h2, w1:w2]
             y1, y2 = (
