@@ -5,7 +5,15 @@ data_path: /datasets/imagenet
 token_mixing_type: ser_pm
 in_channels: 3
 layers:
-  - depth: 12
+  - depth: 4
+    dim: 768
+    patch_size: 16
+    raft_size: 2
+  - depth: 4
+    dim: 768
+    patch_size: 16
+    raft_size: 2
+  - depth: 4
     dim: 768
     patch_size: 16
     raft_size: 2
