@@ -33,8 +33,8 @@ num_workers: 20
 lr: 0.001
 end_lr: 0.001
 weight_decay: 0.05
-num_epochs: 1
-num_warmup_epochs: 0
+num_epochs: 2
+num_warmup_epochs: 1
 validate_every: 1
 stop_iteration:
 bucket_name: sscr-mlp
