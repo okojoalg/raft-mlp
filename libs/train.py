@@ -284,8 +284,8 @@ def initialize(params):
     optimizer = idist.auto_optim(optimizer)
     criterion = LabelSmoothingCrossEntropyLoss(
         alpha=params.settings.label_smoothing_alpha
-    ).to(idist.device())
-    eval_criterion = nn.CrossEntropyLoss().to(idist.device())
+    ).to(idist.device(), non_blocking=True)
+    eval_criterion = nn.CrossEntropyLoss().to(idist.device(), non_blocking=True)
 
     le = params.settings.num_iters_per_epoch
 
