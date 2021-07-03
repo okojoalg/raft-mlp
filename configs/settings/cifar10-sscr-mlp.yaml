@@ -10,7 +10,7 @@ layers:
     patch_size: 4
     raft_size: 2
 token_expansion_factor: 2
-channnel_expansion_factor: 4
+channel_expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
