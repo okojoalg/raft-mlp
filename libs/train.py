@@ -25,7 +25,7 @@ from libs.augmentations import CutMixup
 from libs.consts import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.losses import LabelSmoothingCrossEntropyLoss
-from libs.models import S3CMLP
+from libs.models import SSCRMLP
 
 
 def training(local_rank, params):
@@ -247,12 +247,13 @@ def get_dataflow(params):
 
 
 def initialize(params):
-    model = S3CMLP(
+    model = SSCRMLP(
         layers=params.settings.layers,
         in_channels=params.settings.channels,
         image_size=params.settings.image_size,
         num_classes=params.settings.num_classes,
-        expansion_factor=params.settings.expansion_factor,
+        token_expansion_factor=params.settings.token_expansion_factor,
+        channel_expansion_factor=params.settings.channel_expansion_factor,
         dropout=params.settings.dropout,
         token_mixing_type=params.settings.token_mixing_type,
         shortcut=params.settings.shortcut,

@@ -8,7 +8,8 @@ layers:
   - depth: 4
     dim: 256
     patch_size: 4
-expansion_factor: 4
+token_expansion_factor: 2
+channnel_expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
