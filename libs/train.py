@@ -194,6 +194,20 @@ def training(local_rank, params):
         best_model_handler,
     )
 
+    last_model_handler = Checkpoint(
+        {"model": model},
+        get_save_handler(params, clearml_logger),
+        filename_prefix="last",
+        n_saved=1,
+        global_step_transform=global_step_from_engine(trainer),
+    )
+    evaluator.add_event_handler(
+        Events.COMPLETED(
+            lambda *_: trainer.state.epoch == params.settings.num_epochs
+        ),
+        last_model_handler,
+    )
+
     if params.settings.stop_iteration is not None:
 
         @trainer.on(
