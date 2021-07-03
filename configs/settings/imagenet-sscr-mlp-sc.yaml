@@ -19,7 +19,7 @@ layers:
     raft_size: 2
 token_expansion_factor: 2
 channel_expansion_factor: 4
-shortcut: False
+shortcut: True
 gap: True
 dropout: 0.
 mixup_alpha: 0.5
