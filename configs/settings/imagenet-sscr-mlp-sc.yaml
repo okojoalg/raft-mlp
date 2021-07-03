@@ -11,11 +11,11 @@ layers:
     raft_size: 2
   - depth: 4
     dim: 768
-    patch_size: 16
+    patch_size: 1
     raft_size: 2
   - depth: 4
     dim: 768
-    patch_size: 16
+    patch_size: 1
     raft_size: 2
 token_expansion_factor: 2
 channel_expansion_factor: 4
