@@ -6,7 +6,15 @@ token_mixing_type: ser_pm
 in_channels: 3
 layers:
   - depth: 12
-    dim: 768
+    dim: 384
+    patch_size: 16
+    raft_size: 2
+  - depth: 12
+    dim: 384
+    patch_size: 16
+    raft_size: 2
+  - depth: 12
+    dim: 384
     patch_size: 16
     raft_size: 2
 token_expansion_factor: 2
@@ -31,7 +39,7 @@ validate_every: 1
 stop_iteration:
 bucket_name: sscr-mlp
 project_name: sscr-mlp
-task_name: imagenet-sscr-mlp
+task_name: imagenet-sscr-mlp-deep
 backend:
 resume_from:
 nproc_per_node:

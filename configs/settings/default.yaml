@@ -8,8 +8,9 @@ layers:
   - depth: 12
     dim: 768
     patch_size: 16
-    raft_size: 12
-expansion_factor: 4
+    raft_size: 2
+token_expansion_factor: 2
+channel_expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
@@ -19,9 +20,9 @@ mixup_p: 0.8
 cutmix_p: 1.0
 drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
-batch_size: 1024
+batch_size: 2048
 num_workers: 20
-lr: 0.001
+lr: 0.002
 end_lr: 1e-5
 weight_decay: 0.05
 num_epochs: 305

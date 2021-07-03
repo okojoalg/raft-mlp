@@ -4,7 +4,7 @@ from omegaconf import DictConfig, OmegaConf
 import torchinfo
 from ptflops import get_model_complexity_info
 
-from libs.const import IMAGENET, CIFAR10, CIFAR100
+from libs.consts import IMAGENET, CIFAR10, CIFAR100
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.models import S3CMLP
 
