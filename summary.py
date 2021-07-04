@@ -6,7 +6,7 @@ from ptflops import get_model_complexity_info
 
 from libs.consts import IMAGENET, CIFAR10, CIFAR100
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
-from libs.models import S3CMLP
+from libs.models import SSCRMLP
 
 
 @hydra.main(config_path="configs", config_name="config")
@@ -21,12 +21,13 @@ def run_summary(params: DictConfig) -> None:
         dg = CIFAR100Getter()
     else:
         raise ValueError("Invalid dataset name")
-    model = S3CMLP(
+    model = SSCRMLP(
         layers=params.settings.layers,
         in_channels=dg.channels,
         image_size=dg.image_size,
         num_classes=dg.num_classes,
-        expansion_factor=params.settings.expansion_factor,
+        token_expansion_factor=params.settings.token_expansion_factor,
+        channel_expansion_factor=params.settings.channel_expansion_factor,
         dropout=params.settings.dropout,
         token_mixing_type=params.settings.token_mixing_type,
         shortcut=params.settings.shortcut,
