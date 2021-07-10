@@ -14,10 +14,12 @@ channel_expansion_factor: 4
 shortcut: False
 gap: True
 dropout: 0.
-mixup_alpha: 0.5
-cutmix_alpha: 0.2
-mixup_p: 0.8
+mixup_alpha: 0.8
+cutmix_alpha: 1.0
+mixup_p: 1.0
 cutmix_p: 1.0
+cutout_p: 0.25
+mixup_ratio: 0.5
 drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
 batch_size: 512

@@ -23,7 +23,7 @@ from libs.regularizations import DropPath
 
 class Block(nn.Module):
     def __init__(
-            self, dim, expansion_factor=4, dropout=0.0, drop_path_rate=0.0
+        self, dim, expansion_factor=4, dropout=0.0, drop_path_rate=0.0
     ):
         super().__init__()
         self.norm = nn.Identity()
@@ -44,7 +44,7 @@ class Block(nn.Module):
 
 class ChannelBlock(Block):
     def __init__(
-            self, dim, expansion_factor=4, dropout=0.0, drop_path_rate=0.0
+        self, dim, expansion_factor=4, dropout=0.0, drop_path_rate=0.0
     ):
         super().__init__(dim, expansion_factor, dropout, drop_path_rate)
         self.norm = nn.LayerNorm(dim)
@@ -52,12 +52,12 @@ class ChannelBlock(Block):
 
 class TokenBlock(Block):
     def __init__(
-            self,
-            dim,
-            channels,
-            expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        dim,
+        channels,
+        expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(dim, expansion_factor, dropout, drop_path_rate)
         self.norm = nn.Sequential(
@@ -71,12 +71,12 @@ class TokenBlock(Block):
 
 class SpatiallySeparatedTokenBlock(Block):
     def __init__(
-            self,
-            dim,
-            channels,
-            expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        dim,
+        channels,
+        expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(dim, expansion_factor, dropout, drop_path_rate)
         self.norm = nn.Sequential(
@@ -90,13 +90,13 @@ class SpatiallySeparatedTokenBlock(Block):
 
 class PermutedBlock(Block):
     def __init__(
-            self,
-            spatial_dim,
-            channels,
-            raft_size,
-            expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        spatial_dim,
+        channels,
+        raft_size,
+        expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(
             spatial_dim * raft_size,
@@ -144,16 +144,16 @@ class Level(nn.Module, ABC):
 
 class SeparatedLNCodimLevel(Level):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            depth=4,
-            image_size=224,
-            patch_size=4,
-            token_expansion_factor=2,
-            channel_expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        in_channels,
+        out_channels,
+        depth=4,
+        image_size=224,
+        patch_size=4,
+        token_expansion_factor=2,
+        channel_expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(
@@ -165,7 +165,7 @@ class SeparatedLNCodimLevel(Level):
                 ),
                 nn.Linear((patch_size ** 2) * in_channels, out_channels)
                 if patch_size != 1
-                   or (patch_size == 1 and in_channels == out_channels)
+                or (patch_size == 1 and in_channels == out_channels)
                 else nn.Identity(),
                 *[
                     nn.Sequential(
@@ -211,16 +211,16 @@ class SeparatedLNCodimLevel(Level):
 
 class SeparatedLNChannelLevel(Level):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            depth=4,
-            image_size=224,
-            patch_size=4,
-            token_expansion_factor=2,
-            channel_expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        in_channels,
+        out_channels,
+        depth=4,
+        image_size=224,
+        patch_size=4,
+        token_expansion_factor=2,
+        channel_expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(
@@ -232,7 +232,7 @@ class SeparatedLNChannelLevel(Level):
                 ),
                 nn.Linear((patch_size ** 2) * in_channels, out_channels)
                 if patch_size != 1
-                   or (patch_size == 1 and in_channels == out_channels)
+                or (patch_size == 1 and in_channels == out_channels)
                 else nn.Identity(),
                 *[
                     nn.Sequential(
@@ -278,17 +278,17 @@ class SeparatedLNChannelLevel(Level):
 
 class SerialPermutedLevel(Level):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            depth=4,
-            image_size=224,
-            patch_size=4,
-            token_expansion_factor=2,
-            channel_expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
-            raft_size=4,
+        self,
+        in_channels,
+        out_channels,
+        depth=4,
+        image_size=224,
+        patch_size=4,
+        token_expansion_factor=2,
+        channel_expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
+        raft_size=4,
     ):
         super().__init__(image_size, patch_size)
 
@@ -302,7 +302,7 @@ class SerialPermutedLevel(Level):
                 ),
                 nn.Linear((patch_size ** 2) * in_channels, out_channels)
                 if patch_size != 1
-                   or (patch_size == 1 and in_channels == out_channels)
+                or (patch_size == 1 and in_channels == out_channels)
                 else nn.Identity(),
                 *[
                     nn.Sequential(
@@ -361,16 +361,16 @@ class SerialPermutedLevel(Level):
 
 class OriginalLevel(Level):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            depth=4,
-            image_size=224,
-            patch_size=4,
-            token_expansion_factor=2,
-            channel_expansion_factor=4,
-            dropout=0.0,
-            drop_path_rate=0.0,
+        self,
+        in_channels,
+        out_channels,
+        depth=4,
+        image_size=224,
+        patch_size=4,
+        token_expansion_factor=2,
+        channel_expansion_factor=4,
+        dropout=0.0,
+        drop_path_rate=0.0,
     ):
         super().__init__(image_size, patch_size)
         self.fn = nn.Sequential(
@@ -416,18 +416,18 @@ class OriginalLevel(Level):
 
 class SSCRMLP(nn.Module):
     def __init__(
-            self,
-            layers: List[Dict],
-            in_channels: int = 3,
-            image_size: int = 224,
-            num_classes: int = 1000,
-            token_expansion_factor: int = 2,
-            channel_expansion_factor: int = 4,
-            dropout: float = 0.0,
-            token_mixing_type: str = SER_PM,
-            shortcut: bool = True,
-            gap: bool = False,
-            drop_path_rate: float = 0.0,
+        self,
+        layers: List[Dict],
+        in_channels: int = 3,
+        image_size: int = 224,
+        num_classes: int = 1000,
+        token_expansion_factor: int = 2,
+        channel_expansion_factor: int = 4,
+        dropout: float = 0.0,
+        token_mixing_type: str = SER_PM,
+        shortcut: bool = True,
+        gap: bool = False,
+        drop_path_rate: float = 0.0,
     ):
         assert token_mixing_type in TOKEN_MIXING_TYPES
         for i, layer in enumerate(layers):
@@ -503,7 +503,7 @@ class SSCRMLP(nn.Module):
             output = (
                 reduce(
                     lambda a, b: b[:, : self.layers[-1].get(DIM)] * a
-                                 + b[:, self.layers[-1].get(DIM):],
+                    + b[:, self.layers[-1].get(DIM) :],
                     output[::-1],
                 )
                 if self.gap
@@ -511,8 +511,8 @@ class SSCRMLP(nn.Module):
                     lambda a, b: b[:, : self.layers[-1].get(DIM)].view(
                         -1, self.layers[-1].get(DIM), 1, 1
                     )
-                                 * a
-                                 + b[:, self.layers[-1].get(DIM):].view(
+                    * a
+                    + b[:, self.layers[-1].get(DIM) :].view(
                         -1, self.layers[-1].get(DIM), 1, 1
                     ),
                     output[::-1],

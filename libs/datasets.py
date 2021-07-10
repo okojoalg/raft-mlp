@@ -5,8 +5,14 @@ from randaugment import RandAugment
 from torchvision import datasets
 from torchvision.transforms import transforms
 
+from libs.augmentations import Cutout
+
 
 class DatasetGetter(ABC):
+    def __init__(self, cutout_p):
+        self.cutout_p = cutout_p
+        pass
+
     def get(self, path):
         raise NotImplementedError
 
@@ -24,13 +30,15 @@ class DatasetGetter(ABC):
 
 
 class CIFARGetter(DatasetGetter, ABC):
-    def __init__(self):
+    def __init__(self, cutout_p):
+        super().__init__(cutout_p)
         self.train_transform = transforms.Compose(
             [
                 transforms.Pad(4),
                 transforms.RandomCrop(32, fill=128),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
+                Cutout(cutout_p),
                 transforms.Normalize(
                     (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
                 ),
@@ -97,7 +105,8 @@ class CIFAR100Getter(CIFARGetter):
 
 
 class ImageNetGetter:
-    def __init__(self):
+    def __init__(self, cutout_p):
+        super().__init__(cutout_p)
         self.train_transform = transforms.Compose(
             [
                 transforms.Resize(256),
@@ -105,6 +114,7 @@ class ImageNetGetter:
                 transforms.RandomHorizontalFlip(),
                 RandAugment(),
                 transforms.ToTensor(),
+                Cutout(cutout_p),
                 transforms.Normalize(
                     (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
                 ),
