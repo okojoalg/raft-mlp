@@ -104,7 +104,7 @@ class CIFAR100Getter(CIFARGetter):
         return 100
 
 
-class ImageNetGetter:
+class ImageNetGetter(DatasetGetter):
     def __init__(self, cutout_p):
         super().__init__(cutout_p)
         self.train_transform = transforms.Compose(
