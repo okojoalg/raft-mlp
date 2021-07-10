@@ -26,7 +26,7 @@ from libs.augmentations import Mixup, CutMix
 from libs.consts import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.losses import LabelSmoothingCrossEntropyLoss
-from libs.models import SSCRMLP
+from libs.models import RaftMLP
 
 
 def training(local_rank, params):
@@ -267,7 +267,7 @@ def get_dataflow(params):
 
 
 def initialize(params):
-    model = SSCRMLP(
+    model = RaftMLP(
         layers=params.settings.layers,
         in_channels=params.settings.channels,
         image_size=params.settings.image_size,

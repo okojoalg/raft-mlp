@@ -9,7 +9,7 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-    container_name: sscr-mlp
+    container_name: raft-mlp
     volumes:
       - .:/workdir
       - data/:/data
