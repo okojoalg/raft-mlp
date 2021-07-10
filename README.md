@@ -1,6 +1,6 @@
-# SSCR-MLP
+# RaftMLP
 
-This repository contains the training code for SSCR-MLP.
+This repository contains the training code for RaftMLP.
 
 ## Require
 

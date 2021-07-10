@@ -31,9 +31,9 @@ num_epochs: 24
 num_warmup_epochs: 4
 validate_every: 1
 stop_iteration:
-bucket_name: sscr-mlp
-project_name: sscr-mlp
-task_name: cifar10-sscr-mlp
+bucket_name: raft-mlp
+project_name: raft-mlp
+task_name: cifar10-raft-mlp
 backend:
 resume_from:
 nproc_per_node:

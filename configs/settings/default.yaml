@@ -31,8 +31,8 @@ num_epochs: 305
 num_warmup_epochs: 5
 validate_every: 1
 stop_iteration:
-bucket_name: sscr-mlp
-project_name: sscr-mlp
+bucket_name: raft-mlp
+project_name: raft-mlp
 task_name: default
 backend:
 resume_from:
