@@ -33,7 +33,7 @@ validate_every: 1
 stop_iteration:
 bucket_name: raft-mlp
 project_name: raft-mlp
-task_name: imagenet-sscr-mlp
+task_name: imagenet-raft-mlp
 backend:
 resume_from:
 nproc_per_node:
