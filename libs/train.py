@@ -374,7 +374,7 @@ def create_trainer(
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
         mix_aug = (
-            MixUp(alpha=params.settings.mixup_alpha, p=params.settings.mixup_p)
+            Mixup(alpha=params.settings.mixup_alpha, p=params.settings.mixup_p)
             if params.settings.mixup_ratio > random.uniform(0, 1)
             else CutMix(
                 height=params.settings.image_size,
