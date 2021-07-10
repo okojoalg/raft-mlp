@@ -18,7 +18,7 @@ class Mix(object):
     def criterion(self, criterion, y_pred, y: Tuple):
         if self.enable:
             return self.lamb * criterion(y_pred, y[0]) + (
-                1 - self.lamb
+                    1 - self.lamb
             ) * criterion(y_pred, y[1])
         else:
             return criterion(y_pred, y[0])
@@ -97,9 +97,9 @@ class Cutout(object):
             bw = int(round(math.sqrt(area / aspect_ratio)))
             for attempt in range(10):
                 if bh < h and bw < w:
-                    y = random.randint(h - bh)
-                    x = random.randint(w - bw)
-                    img[:, y : y + bh, x : x + bw] = torch.zeros(
+                    y = random.randint(0, h - bh)
+                    x = random.randint(0, w - bw)
+                    img[:, y: y + bh, x: x + bw] = torch.zeros(
                         (c, 1, 1), dtype=img.dtype, device=img.device
                     )
                     break
