@@ -8,7 +8,7 @@ layers:
   - depth: 4
     dim: 256
     patch_size: 4
-    raft_size: 2
+    raft_size: 4
 token_expansion_factor: 2
 channel_expansion_factor: 4
 shortcut: False
@@ -19,7 +19,7 @@ cutmix_alpha: 1.0
 mixup_p: 1.0
 cutmix_p: 1.0
 cutout_p: 0.25
-mixup_ratio: 0.5
+color_jitter: 0.4
 drop_path_rate: 0.1
 label_smoothing_alpha: 0.1
 batch_size: 512

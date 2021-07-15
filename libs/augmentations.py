@@ -77,6 +77,36 @@ class CutMix(Mix):
         return h1, h2, w1, w2
 
 
+class CutMixup(object):
+    def __init__(
+            self,
+            height,
+            width,
+            mixup_alpha=0.5,
+            cutmix_alpha=0.5,
+            mixup_p=0.8,
+            cutmix_p=1.0,
+    ):
+        self.mixup = Mixup(mixup_alpha, mixup_p)
+        self.cutmix = CutMix(height, width, cutmix_alpha, cutmix_p)
+
+    @torch.no_grad()
+    def mix(self, x, y):
+        x, y = self.mixup.mix(x, y)
+        x, y = self.cutmix.mix(x, y)
+        return x, y
+
+    def criterion(self, criterion, y_pred, y: Tuple):
+        if self.cutmix.enable:
+            return self.cutmix.lamb * self.mixup.criterion(
+                criterion, y_pred, y[0]
+            ) + (1 - self.cutmix.lamb) * self.mixup.criterion(
+                criterion, y_pred, y[1]
+            )
+        else:
+            return self.mixup.criterion(criterion, y_pred, y[0])
+
+
 class Cutout(object):
     def __init__(self, p=0.5, min_area=0.02, max_area=1 / 3, aspect=0.3):
         super().__init__()

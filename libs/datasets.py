@@ -9,7 +9,8 @@ from libs.augmentations import Cutout
 
 
 class DatasetGetter(ABC):
-    def __init__(self, cutout_p):
+    def __init__(self, color_jitter, cutout_p):
+        self.color_jitter = (float(color_jitter),) * 3
         self.cutout_p = cutout_p
         pass
 
@@ -30,13 +31,14 @@ class DatasetGetter(ABC):
 
 
 class CIFARGetter(DatasetGetter, ABC):
-    def __init__(self, cutout_p):
-        super().__init__(cutout_p)
+    def __init__(self, color_jitter, cutout_p):
+        super().__init__(color_jitter, cutout_p)
         self.train_transform = transforms.Compose(
             [
                 transforms.Pad(4),
                 transforms.RandomCrop(32, fill=128),
                 transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(*self.color_jitter),
                 transforms.ToTensor(),
                 Cutout(cutout_p),
                 transforms.Normalize(
@@ -105,13 +107,15 @@ class CIFAR100Getter(CIFARGetter):
 
 
 class ImageNetGetter(DatasetGetter):
-    def __init__(self, cutout_p):
-        super().__init__(cutout_p)
+    def __init__(self, color_jitter, cutout_p):
+        super().__init__(color_jitter, cutout_p)
+
         self.train_transform = transforms.Compose(
             [
                 transforms.Resize(256),
                 transforms.RandomCrop(224),
                 transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(*self.color_jitter),
                 RandAugment(),
                 transforms.ToTensor(),
                 Cutout(cutout_p),
