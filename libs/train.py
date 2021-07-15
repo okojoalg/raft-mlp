@@ -22,7 +22,7 @@ from ignite.utils import manual_seed, setup_logger
 from omegaconf import open_dict
 from torch.cuda.amp import GradScaler, autocast
 
-from libs.augmentations import Mixup, CutMix
+from libs.augmentations import CutMixup
 from libs.consts import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
 from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
 from libs.losses import LabelSmoothingCrossEntropyLoss
@@ -46,10 +46,10 @@ def training(local_rank, params):
 
     log_basic_info(logger, params)
 
+    assert 0.0 <= params.settings.color_jitter <= 1.0
     assert 0.0 <= params.settings.mixup_p <= 1.0
     assert 0.0 <= params.settings.cutmix_p <= 1.0
     assert 0.0 <= params.settings.cutout_p <= 1.0
-    assert 0.0 <= params.settings.mixup_ratio <= 1.0
 
     if rank == 0:
         if params.settings.stop_iteration is None:
@@ -237,11 +237,20 @@ def get_dataflow(params):
         idist.barrier()
 
     if params.settings.dataset_name == IMAGENET:
-        dg = ImageNetGetter(cutout_p=params.settings.cutout_p)
+        dg = ImageNetGetter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     elif params.settings.dataset_name == CIFAR10:
-        dg = CIFAR10Getter(cutout_p=params.settings.cutout_p)
+        dg = CIFAR10Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     elif params.settings.dataset_name == CIFAR100:
-        dg = CIFAR100Getter(cutout_p=params.settings.cutout_p)
+        dg = CIFAR100Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     else:
         raise ValueError("Invalid dataset name")
     train_ds, val_ds = dg.get(params.settings.data_path)
@@ -373,23 +382,22 @@ def create_trainer(
         if x.device != device:
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
-        mix_aug = (
-            Mixup(alpha=params.settings.mixup_alpha, p=params.settings.mixup_p)
-            if params.settings.mixup_ratio > random.uniform(0, 1)
-            else CutMix(
-                height=params.settings.image_size,
-                width=params.settings.image_size,
-                alpha=params.settings.mixup_alpha,
-                p=params.settings.cutmix_p,
-            )
+
+        cutmixup = CutMixup(
+            height=params.settings.image_size,
+            width=params.settings.image_size,
+            mixup_alpha=params.settings.mixup_alpha,
+            cutmix_alpha=params.settings.mixup_alpha,
+            mixup_p=params.settings.mixup_p,
+            cutmix_p=params.settings.cutmix_p,
         )
-        x, y = mix_aug.mix(x, y)
+        x, y = cutmixup.mix(x, y)
 
         model.train()
 
         with autocast(enabled=with_amp):
             y_pred = model(x)
-            loss = mix_aug.criterion(criterion, y_pred, y)
+            loss = cutmixup.criterion(criterion, y_pred, y)
 
         optimizer.zero_grad()
         scaler.scale(loss).backward()

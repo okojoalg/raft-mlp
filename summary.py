@@ -14,11 +14,20 @@ def run_summary(params: DictConfig) -> None:
     print(OmegaConf.to_yaml(params))
     OmegaConf.set_struct(params, True)
     if params.settings.dataset_name == IMAGENET:
-        dg = ImageNetGetter()
+        dg = ImageNetGetter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     elif params.settings.dataset_name == CIFAR10:
-        dg = CIFAR10Getter()
+        dg = CIFAR10Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     elif params.settings.dataset_name == CIFAR100:
-        dg = CIFAR100Getter()
+        dg = CIFAR100Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
     else:
         raise ValueError("Invalid dataset name")
     model = RaftMLP(
