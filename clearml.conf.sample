@@ -1,0 +1,25 @@
+api {
+  web_server: https://app.community.clear.ml
+  api_server: https://api.community.clear.ml
+  files_server: https://files.community.clear.ml
+  credentials {
+    "access_key" = "xxx"
+    "secret_key" = "xxx"
+  }
+}
+sdk {
+  aws {
+    s3 {
+      # S3 credentials, used for read/write access by various SDK elements
+
+      # default, used for any bucket not specified below
+      key: "xxx"
+      secret: "xxx"
+      region: "ap-northeast-1"
+    }
+    boto3 {
+      pool_connections: 512
+      max_multipart_concurrency: 16
+    }
+  }
+}

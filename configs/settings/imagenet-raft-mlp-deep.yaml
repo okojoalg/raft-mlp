@@ -1,0 +1,41 @@
+checkpoint_every: 1000
+log_every_iters: 15
+dataset_name: imagenet
+data_path: /datasets/imagenet
+token_mixing_type: ser_pm
+in_channels: 3
+layers:
+  - depth: 36
+    dim: 384
+    patch_size: 16
+    raft_size: 2
+token_expansion_factor: 2
+channel_expansion_factor: 4
+shortcut: False
+gap: True
+dropout: 0.
+mixup_alpha: 0.8
+cutmix_alpha: 1.0
+mixup_p: 1.0
+cutmix_p: 1.0
+cutout_p: 0.25
+color_jitter: 0.4
+drop_path_rate: 0.1
+label_smoothing_alpha: 0.1
+batch_size: 1536
+num_workers: 20
+lr: 0.0015
+end_lr: 1e-5
+weight_decay: 0.05
+num_epochs: 305
+num_warmup_epochs: 5
+validate_every: 1
+stop_iteration:
+bucket_name: raft-mlp
+project_name: raft-mlp
+task_name: imagenet-raft-mlp-deep
+backend:
+resume_from:
+nproc_per_node:
+with_clearml: True
+with_amp: False
