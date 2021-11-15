@@ -1,0 +1,42 @@
+checkpoint_every: 1000
+log_every_iters: 15
+dataset_name: inat19
+data_path: /datasets
+token_mixing_type: original_tm
+embedding_type: emb_mixer
+pretrained_from: /datasets/weights/imagenet-org-mixer/last_model_0.pt
+pretrained_image_size: 224
+in_channels: 3
+layers:
+  - depth: 12
+    dim: 768
+    patch_size: 16
+token_expansion_factor: 2
+channel_expansion_factor: 4
+shortcut: False
+dropout: 0.
+mixup_alpha: 0.8
+cutmix_alpha: 1.0
+mixup_p: 1.0
+cutmix_p: 1.0
+cutout_p: 0.
+color_jitter: 0.4
+drop_path_rate: 0.
+label_smoothing_alpha: 0.1
+batch_size: 256
+num_workers: 20
+lr: 1e-4
+end_lr: 1e-5
+weight_decay: 1e-4
+num_epochs: 50
+num_warmup_epochs: 10
+validate_every: 1
+stop_iteration:
+bucket_name: raft-mlp
+project_name: raft-mlp
+task_name: inat19-org-mixer
+backend:
+resume_from:
+nproc_per_node:
+with_clearml: True
+with_amp: False

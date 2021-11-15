@@ -3,16 +3,29 @@ log_every_iters: 15
 dataset_name: cifar10
 data_path: /datasets
 token_mixing_type: ser_pm
+embedding_type: emb_cross_mlp
+pretrained_from:
+pretrained_image_size: 224
 in_channels: 3
 layers:
-  - depth: 4
-    dim: 256
-    patch_size: 4
+  - depth: 2
+    dim: 128
+    patch_size: 2
     raft_size: 4
+    embedding_kernels:
+      - 2
+      - 4
+      - 8
+  - depth: 2
+    dim: 256
+    patch_size: 2
+    raft_size: 4
+    embedding_kernels:
+      - 2
+      - 4
 token_expansion_factor: 2
 channel_expansion_factor: 4
 shortcut: False
-gap: True
 dropout: 0.
 mixup_alpha: 0.8
 cutmix_alpha: 1.0

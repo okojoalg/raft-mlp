@@ -21,3 +21,38 @@ Please execute the following command:
 ```docker-compose up -d```
 
 This will build the docker image, start the container, and run the training code on the container. The results and models during execution are uploaded to ClearML by the process and can be viewed from the ClearML web app.
+
+≈bash ./segmentation.sh configs/segmentation/fpn_raftmlp_l_512x512_40k_ade20k.py 1 --seed=42 --deterministic --gpus=1
+bash ./detection.sh configs/detection/retinanet_org_mixer_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1
+bash ./detection.sh configs/detection/maskrcnn_raftmlp_l_fpn_1x_coco.py 1 --seed=1 --deterministic --gpus=1
+
+bash ./segmentation.sh configs/segmentation/fpn_org_mixer_512x512_40k_ade20k.py 8 --seed=42 --deterministic --gpus=8
+bash ./segmentation.sh configs/segmentation/fpn_raftmlp_l_512x512_40k_ade20k.py 8 --seed=42 --deterministic --gpus=8
+bash ./detection.sh configs/detection/retinanet_org_mixer_fpn_1x_coco.py 8 --seed=42 --deterministic --gpus=8
+bash ./detection.sh configs/detection/maskrcnn_raftmlp_l_fpn_1x_coco.py 8 --seed=42 --deterministic --gpus=8
+
+bash ./segmentation.sh configs/segmentation/fpn_org_mixer_512x512_40k_ade20k.py 1 --seed=42 --deterministic --gpus=1
+63,938,598
+bash ./segmentation.sh configs/segmentation/fpn_raftmlp_s_512x512_40k_ade20k.py 1 --seed=42 --deterministic --gpus=1
+13,605,006
+bash ./segmentation.sh configs/segmentation/fpn_raftmlp_m_512x512_40k_ade20k.py 1 --seed=42 --deterministic --gpus=1
+25,016,238
+bash ./segmentation.sh configs/segmentation/fpn_raftmlp_l_512x512_40k_ade20k.py 1 --seed=42 --deterministic --gpus=1
+39,637,262
+
+bash ./detection.sh configs/detection/retinanet_org_mixer_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+70,331,524
+bash ./detection.sh configs/detection/retinanet_raftmlp_s_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+19,588,332
+bash ./detection.sh configs/detection/retinanet_raftmlp_m_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+31,581,196
+bash ./detection.sh configs/detection/retinanet_raftmlp_l_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+46,783,852
+bash ./detection.sh configs/detection/maskrcnn_org_mixer_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+79,839,360
+bash ./detection.sh configs/detection/maskrcnn_raftmlp_s_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+29,505,768
+bash ./detection.sh configs/detection/maskrcnn_raftmlp_m_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+40,917,000
+bash ./detection.sh configs/detection/maskrcnn_raftmlp_l_fpn_1x_coco.py 1 --seed=42 --deterministic --gpus=1 | grep "Total params";
+55,538,024

@@ -3,6 +3,9 @@ log_every_iters: 15
 dataset_name: imagenet
 data_path: /datasets/imagenet
 token_mixing_type: ser_pm
+embedding_type: emb_mixer
+pretrained_from:
+pretrained_image_size: 224
 in_channels: 3
 layers:
   - depth: 36
@@ -12,7 +15,6 @@ layers:
 token_expansion_factor: 2
 channel_expansion_factor: 4
 shortcut: False
-gap: True
 dropout: 0.
 mixup_alpha: 0.8
 cutmix_alpha: 1.0

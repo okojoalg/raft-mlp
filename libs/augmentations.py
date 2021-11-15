@@ -18,7 +18,7 @@ class Mix(object):
     def criterion(self, criterion, y_pred, y: Tuple):
         if self.enable:
             return self.lamb * criterion(y_pred, y[0]) + (
-                    1 - self.lamb
+                1 - self.lamb
             ) * criterion(y_pred, y[1])
         else:
             return criterion(y_pred, y[0])
@@ -79,13 +79,13 @@ class CutMix(Mix):
 
 class CutMixup(object):
     def __init__(
-            self,
-            height,
-            width,
-            mixup_alpha=0.5,
-            cutmix_alpha=0.5,
-            mixup_p=0.8,
-            cutmix_p=1.0,
+        self,
+        height,
+        width,
+        mixup_alpha=0.5,
+        cutmix_alpha=0.5,
+        mixup_p=0.8,
+        cutmix_p=1.0,
     ):
         self.mixup = Mixup(mixup_alpha, mixup_p)
         self.cutmix = CutMix(height, width, cutmix_alpha, cutmix_p)
@@ -129,7 +129,7 @@ class Cutout(object):
                 if bh < h and bw < w:
                     y = random.randint(0, h - bh)
                     x = random.randint(0, w - bw)
-                    img[:, y: y + bh, x: x + bw] = torch.zeros(
+                    img[:, y : y + bh, x : x + bw] = torch.zeros(
                         (c, 1, 1), dtype=img.dtype, device=img.device
                     )
                     break

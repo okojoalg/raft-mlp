@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-import random
 
 import ignite
 import ignite.distributed as idist
@@ -19,12 +18,13 @@ from ignite.engine import Engine, Events
 from ignite.handlers import DiskSaver, Checkpoint, global_step_from_engine
 from ignite.metrics import Loss, Accuracy, TopKCategoricalAccuracy
 from ignite.utils import manual_seed, setup_logger
-from omegaconf import open_dict
+from omegaconf import open_dict, ListConfig
 from torch.cuda.amp import GradScaler, autocast
 
 from libs.augmentations import CutMixup
-from libs.consts import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME
-from libs.datasets import ImageNetGetter, CIFAR10Getter, CIFAR100Getter
+from libs.consts import CIFAR10, CIFAR100, IMAGENET, LOGGER_NAME, FLOWERS102, STANFORD_CARS, INATURALIST18, INATURALIST19
+from libs.datasets import (ImageNetGetter, CIFAR10Getter, CIFAR100Getter,
+                           Flowers102Getter, StanfordCarsGetter, INaturalist18Getter, INaturalist19Getter)
 from libs.losses import LabelSmoothingCrossEntropyLoss
 from libs.models import RaftMLP
 
@@ -59,9 +59,9 @@ def training(local_rank, params):
 
         folder_name = f"{idist.get_world_size()}_{now}"
         output_path = (
-            Path(params.settings.bucket_name)
-            / params.settings.task_name
-            / folder_name
+                Path(params.settings.bucket_name)
+                / params.settings.task_name
+                / folder_name
         )
         with open_dict(params):
             params.settings.output_path = f"s3://{output_path.as_posix()}"
@@ -96,7 +96,7 @@ def training(local_rank, params):
             hp = {k: params.settings[k] for k in hyper_params}
             hp.update(
                 {
-                    f"layer{i}_{k}": v
+                    f"layer{i}_{k}": list(v) if type(v) == ListConfig else v
                     for i, w in enumerate(params.settings["layers"])
                     for k, v in w.items()
                 }
@@ -104,14 +104,15 @@ def training(local_rank, params):
             hp.update({"seed": params.seed})
             task.connect(hp)
 
-    train_loader, val_loader, num_classes, image_size, channels = get_dataflow(
+    train_loader, val_loader, num_classes, image_height, image_width, channels = get_dataflow(
         params
     )
 
     with open_dict(params):
         params.settings.num_iters_per_epoch = len(train_loader)
         params.settings.num_classes = num_classes
-        params.settings.image_size = image_size
+        params.settings.image_height = image_height
+        params.settings.image_width = image_width
         params.settings.channels = channels
     model, optimizer, criterion, eval_criterion, lr_scheduler = initialize(
         params
@@ -215,7 +216,6 @@ def training(local_rank, params):
     )
 
     if params.settings.stop_iteration is not None:
-
         @trainer.on(
             Events.ITERATION_STARTED(once=params.settings.stop_iteration)
         )
@@ -245,9 +245,31 @@ def get_dataflow(params):
         dg = CIFAR10Getter(
             color_jitter=params.settings.color_jitter,
             cutout_p=params.settings.cutout_p,
+            size=224 if params.settings.pretrained_from else 32,
         )
     elif params.settings.dataset_name == CIFAR100:
         dg = CIFAR100Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+            size=224 if params.settings.pretrained_from else 32,
+        )
+    elif params.settings.dataset_name == FLOWERS102:
+        dg = Flowers102Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
+    elif params.settings.dataset_name == STANFORD_CARS:
+        dg = StanfordCarsGetter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
+    elif params.settings.dataset_name == INATURALIST18:
+        dg = INaturalist18Getter(
+            color_jitter=params.settings.color_jitter,
+            cutout_p=params.settings.cutout_p,
+        )
+    elif params.settings.dataset_name == INATURALIST19:
+        dg = INaturalist19Getter(
             color_jitter=params.settings.color_jitter,
             cutout_p=params.settings.cutout_p,
         )
@@ -272,23 +294,32 @@ def get_dataflow(params):
         num_workers=params.settings.num_workers,
         shuffle=False,
     )
-    return train_loader, val_loader, dg.num_classes, dg.image_size, dg.channels
+    return train_loader, val_loader, dg.num_classes, dg.image_height, dg.image_width, dg.channels
 
 
 def initialize(params):
     model = RaftMLP(
         layers=params.settings.layers,
         in_channels=params.settings.channels,
-        image_size=params.settings.image_size,
+        pretrained_image_size=params.settings.pretrained_image_size,
         num_classes=params.settings.num_classes,
         token_expansion_factor=params.settings.token_expansion_factor,
         channel_expansion_factor=params.settings.channel_expansion_factor,
         dropout=params.settings.dropout,
         token_mixing_type=params.settings.token_mixing_type,
+        embedding_type=params.settings.embedding_type,
         shortcut=params.settings.shortcut,
-        gap=params.settings.gap,
         drop_path_rate=params.settings.drop_path_rate,
     )
+
+    pretrained_from = params.settings.pretrained_from
+    if pretrained_from is not None:
+        fp = Path(pretrained_from)
+        parameters = torch.load(fp.as_posix(), map_location="cpu")
+        parameters.pop('classifier.weight', None)
+        parameters.pop('classifier.bias', None)
+        model.load_state_dict(parameters, strict=False)
+
     model = idist.auto_model(model)
 
     optimizer = optim.AdamW(
@@ -319,7 +350,7 @@ def initialize(params):
         start_value=params.settings.lr,
         end_value=params.settings.end_lr,
         cycle_size=le
-        * (params.settings.num_epochs - params.settings.num_warmup_epochs),
+                   * (params.settings.num_epochs - params.settings.num_warmup_epochs),
     )
     lr_scheduler = ConcatScheduler(
         schedulers=[lr_scheduler1, lr_scheduler2],
@@ -363,14 +394,14 @@ def log_basic_info(logger, params):
 
 
 def create_trainer(
-    model,
-    optimizer,
-    criterion,
-    lr_scheduler,
-    train_sampler,
-    params,
-    logger,
-    clearml_logger,
+        model,
+        optimizer,
+        criterion,
+        lr_scheduler,
+        train_sampler,
+        params,
+        logger,
+        clearml_logger,
 ):
     device = idist.device()
     with_amp = params.settings.with_amp
@@ -384,8 +415,8 @@ def create_trainer(
             y = y.to(device, non_blocking=True)
 
         cutmixup = CutMixup(
-            height=params.settings.image_size,
-            width=params.settings.image_size,
+            height=params.settings.image_height,
+            width=params.settings.image_width,
             mixup_alpha=params.settings.mixup_alpha,
             cutmix_alpha=params.settings.mixup_alpha,
             mixup_p=params.settings.mixup_p,
