@@ -1,6 +1,6 @@
 version: "2"
 services:
-  notebook:
+  trainer:
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -9,16 +9,18 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - WANDB_API_KEY=hogehoge
     container_name: raft-mlp
     volumes:
       - .:/workdir
-      - data/:/data
+      - path/to/datasets:/datasets
+    working_dir: /workdir
     command: python run.py settings=default
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ '0' ]
+              device_ids: [ '0', '1', '2', '3', '4', '5', '6', '7' ]
               capabilities: [ gpu ]
 
