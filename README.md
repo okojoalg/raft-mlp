@@ -286,5 +286,18 @@ docker run trainer bash ./segmentation.sh configs/segmentation/fpn_raftmlp_m_512
 docker run trainer bash ./segmentation.sh configs/segmentation/fpn_raftmlp_l_512x512_40k_ade20k.py 8 --seed=42 --deterministic --gpus=8
 ```
 
+## Reference
+
+```
+@misc{tatsunami2021raftmlp,
+  title={RaftMLP: How Much Can Be Done Without Attention and with Less Spatial Locality?},
+  author={Yuki Tatsunami and Masato Taki},
+  year={2021}
+  eprint={2108.04384},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV}
+}
+```
+
 ## License
 Apache 2.0 Licensed.
