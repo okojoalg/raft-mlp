@@ -302,4 +302,4 @@ docker run trainer bash ./segmentation.sh configs/segmentation/fpn_raftmlp_l_512
 ```
 
 ## License
-Apache 2.0 Licensed.
+This repository is relased under the Apache 2.0 license as douns in the [LICENSE](LICENSE) file.
