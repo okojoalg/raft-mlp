@@ -3,6 +3,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommends \
     automake \
     bzip2 \
+    ca-certificates \
     dpkg-dev \
     file \
     g++ \
@@ -150,7 +151,7 @@ RUN set -ex; \
 
 COPY clearml.conf /root/clearml.conf
 COPY requirements.txt /tmp/
-RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt && rm -f /tmp/requirements.txt
+RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/index.html && rm -f /tmp/requirements.txt
 EXPOSE 8888
 
 RUN mkdir /workdir
