@@ -208,7 +208,7 @@ docker run trainer python run.py settings=imagenet-raft-mlp-cross-mlp-emb-l
 The ablation study for channel rafts in subsection 4.2 ran the following commands.
 
 
-## Abrasion Study
+## Ablation Study
 
 ```shell
 docker run trainer python run.py settings=imagenet-org-mixer
@@ -217,7 +217,7 @@ docker run trainer python run.py settings=imagenet-raft-mlp-r-2
 docker run trainer python run.py settings=imagenet-raft-mlp
 ```
 
-The abrasion study for multi-scale patch embedding in subsection 4.2 ran the following commands.
+The ablation study for multi-scale patch embedding in subsection 4.2 ran the following commands.
 
 ```shell
 docker run trainer python run.py settings=imagenet-raft-mlp-cross-mlp-emb-m
